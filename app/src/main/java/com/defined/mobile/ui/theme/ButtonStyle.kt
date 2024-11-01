@@ -7,6 +7,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.Button
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.unit.dp
 
 @Composable
@@ -17,16 +18,18 @@ fun StyledButton(
 ) {
     Button(
         onClick = onClick,
-        modifier = modifier.padding(vertical = 4.dp),
+        modifier = modifier
+            .padding(vertical = 4.dp)
+            .shadow(6.dp, MaterialTheme.shapes.medium),
         colors = ButtonDefaults.buttonColors(
-            containerColor = MaterialTheme.colorScheme.primary,
-            contentColor = MaterialTheme.colorScheme.onPrimary
+            containerColor = MaterialTheme.colorScheme.primary, // Uses primary color from theme
+            contentColor = MaterialTheme.colorScheme.onPrimary // Uses onPrimary for text color
         ),
-        shape = MaterialTheme.shapes.medium
+        shape = MaterialTheme.shapes.medium // Shape as defined in theme
     ) {
         Text(
             text = text,
-            style = MaterialTheme.typography.labelLarge // Use a consistent typography style
+            style = MaterialTheme.typography.labelLarge // Uses theme-defined typography
         )
     }
 }

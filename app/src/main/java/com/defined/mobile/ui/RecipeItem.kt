@@ -19,58 +19,60 @@ import com.defined.mobile.R
 @Composable
 fun RecipeItem(
     name: String,
-    description: String = "A delicious recipe to try!", // Optional description
-    onClick: () -> Unit = {} // Optional click action
+    description: String = "A delicious recipe to try!", // Default description text
+    onClick: () -> Unit = {} // Optional onClick action, defaults to no action
 ) {
+    // Card container for the recipe item
     Card(
         modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp, horizontal = 8.dp) // Padding around the card for spacing
-            .clickable { onClick() }, // Clickable functionality
-        shape = RoundedCornerShape(16.dp), // Softer rounded corners for a modern look
+            .fillMaxWidth() // Card takes full width of its container
+            .padding(vertical = 4.dp, horizontal = 8.dp) // Adds vertical and horizontal padding around the card
+            .clickable { onClick() }, // Makes the card clickable
+        shape = RoundedCornerShape(16.dp), // Rounded corners for a modern appearance
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp) // Adds shadow for a subtle elevation effect
     ) {
+        // Row layout to display image and text side-by-side
         Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(12.dp)
+            verticalAlignment = Alignment.CenterVertically, // Center-aligns content vertically
+            modifier = Modifier.padding(12.dp) // Padding around row content for spacing
         ) {
-            // Recipe Image
+            // Recipe Image with rounded corners
             Image(
                 painter = painterResource(id = R.drawable.featured_image),
-                contentDescription = name,
-                contentScale = ContentScale.Crop,
+                contentDescription = name, // Accessibility description
+                contentScale = ContentScale.Crop, // Scales image to fill space without distortion
                 modifier = Modifier
-                    .size(80.dp)
-                    .clip(RoundedCornerShape(12.dp)) // Rounded corners for the image
+                    .size(80.dp) // Fixed size for image
+                    .clip(RoundedCornerShape(12.dp)) // Rounded edges for the image
             )
 
-            Spacer(modifier = Modifier.width(12.dp))
+            Spacer(modifier = Modifier.width(12.dp)) // Spacer to add horizontal space between image and text
 
-            // Text Section
+            // Column layout for the text section
             Column(
-                modifier = Modifier.weight(1f) // Take remaining space
+                modifier = Modifier.weight(1f) // Occupies remaining horizontal space
             ) {
                 // Recipe Title
                 Text(
                     text = name,
                     style = MaterialTheme.typography.titleMedium.copy(
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 18.sp,
-                        color = MaterialTheme.colorScheme.onSurface
+                        fontWeight = FontWeight.Bold, // Bold for emphasis
+                        fontSize = 18.sp, // Font size for readability
+                        color = MaterialTheme.colorScheme.onSurface // Text color for contrast
                     )
                 )
 
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(4.dp)) // Spacer to add vertical space between title and description
 
                 // Recipe Description
                 Text(
                     text = description,
                     style = MaterialTheme.typography.bodySmall.copy(
-                        fontSize = 14.sp,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                        fontSize = 14.sp, // Smaller font size for description
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f) // Slightly transparent color for subdued look
                     ),
-                    maxLines = 2 // Limit to 2 lines to keep it compact
+                    maxLines = 2 // Limits text to 2 lines to keep layout compact
                 )
             }
         }

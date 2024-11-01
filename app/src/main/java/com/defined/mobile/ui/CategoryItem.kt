@@ -22,52 +22,55 @@ import com.defined.mobile.R
 
 @Composable
 fun CategoryItem(name: String) {
+    // Card component to contain the category item with padding and rounded corners
     Card(
         modifier = Modifier
-            .size(110.dp)
-            .padding(6.dp),
+            .size(110.dp) // Setting the card size
+            .padding(6.dp), // Padding around the card
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.secondaryContainer
+            containerColor = MaterialTheme.colorScheme.secondaryContainer // Card background color
         ),
-        shape = RoundedCornerShape(16.dp), // Softer rounded corners for a modern look
-        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
+        shape = RoundedCornerShape(16.dp), // Rounded corners for a softer, modern look
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp) // Elevation for shadow effect
     ) {
+        // Column to arrange components vertically inside the card
         Column(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(8.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center // Center content vertically for balance
+                .fillMaxSize() // Occupies full card size
+                .padding(8.dp), // Padding inside the column
+            horizontalAlignment = Alignment.CenterHorizontally, // Center-align horizontally
+            verticalArrangement = Arrangement.Center // Center content vertically for balanced look
         ) {
-            // Circular Image Background
+            // Box for circular background behind the image
             Box(
                 modifier = Modifier
-                    .size(60.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)), // Light background for contrast
-                contentAlignment = Alignment.Center
+                    .size(60.dp) // Background size
+                    .clip(CircleShape) // Clips the box to a circular shape
+                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)), // Light background color with transparency
+                contentAlignment = Alignment.Center // Centers image inside the box
             ) {
+                // Image inside the box with circular clipping
                 Image(
-                    painter = painterResource(id = R.drawable.featured_image), // Your image resource
-                    contentDescription = name,
-                    contentScale = ContentScale.Crop,
+                    painter = painterResource(id = R.drawable.featured_image), // Image resource
+                    contentDescription = name, // Content description for accessibility
+                    contentScale = ContentScale.Crop, // Crop image to fit dimensions
                     modifier = Modifier
-                        .size(48.dp)
-                        .clip(CircleShape) // Circular image for modern look
+                        .size(48.dp) // Size of the image
+                        .clip(CircleShape) // Clips image to a circular shape for a modern look
                 )
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(8.dp)) // Spacer to add space between image and text
 
-            // Category Name Text
+            // Text component to display the category name
             Text(
                 text = name,
                 style = MaterialTheme.typography.labelLarge.copy(
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                    fontWeight = FontWeight.SemiBold, // Semi-bold font for emphasis
+                    color = MaterialTheme.colorScheme.onSecondaryContainer // Text color for readability
                 ),
-                fontSize = 14.sp,
-                maxLines = 1 // Limiting lines for a clean look
+                fontSize = 14.sp, // Font size of the text
+                maxLines = 1 // Restricts text to one line for cleaner look
             )
         }
     }
