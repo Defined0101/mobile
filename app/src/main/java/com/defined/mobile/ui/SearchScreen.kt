@@ -123,7 +123,7 @@ fun SearchScreen(onBackClick: () -> Unit) {
                 StyledButton(
                     text = "Sort",
                     onClick = {
-                        // TODO: Implement sorting function
+                        // TODO: Implement sorting function with options
                         applyFilter()
                     },
                     modifier = Modifier
