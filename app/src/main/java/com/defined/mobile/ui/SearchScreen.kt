@@ -23,31 +23,41 @@ import com.defined.mobile.ui.theme.StyledButton
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SearchScreen(onBackClick: () -> Unit) {
-    // Sample data: List of recipe names
-    // TODO: Dummy data can be altered to include ingredients to test filtering function
-    val recipeNames = listOf(
-        "Chocolate Cake", "Apple Pie", "Banana Bread",
-        "Pancakes", "Waffles", "Muffins", "Brownies",
-        "Cheesecake", "Cookies", "Lemon Tart"
+    // Sample data: List of recipes
+    val recipes = listOf(
+        DummyRecipe("Chocolate Cake", listOf("Flour", "Sugar", "Cocoa Powder", "Eggs", "Butter"), listOf("Dessert")),
+        DummyRecipe("Apple Pie", listOf("Apples", "Flour", "Sugar", "Butter", "Cinnamon"), listOf("Dessert")),
+        DummyRecipe("Banana Bread", listOf("Bananas", "Flour", "Sugar", "Butter", "Eggs"), listOf("Dessert")),
+        DummyRecipe("Pancakes", listOf("Flour", "Milk", "Eggs", "Butter", "Sugar"), listOf("Breakfast")),
+        DummyRecipe("Waffles", listOf("Flour", "Milk", "Eggs", "Butter", "Sugar"), listOf("Breakfast")),
+        DummyRecipe("Muffins", listOf("Flour", "Sugar", "Butter", "Eggs", "Baking Powder"), listOf("Dessert")),
+        DummyRecipe("Brownies", listOf("Flour", "Sugar", "Cocoa Powder", "Butter", "Eggs"), listOf("Dessert")),
+        DummyRecipe("Cheesecake", listOf("Cream Cheese", "Sugar", "Butter", "Eggs", "Vanilla Extract"), listOf("Dessert")),
+        DummyRecipe("Cookies", listOf("Flour", "Sugar", "Butter", "Eggs", "Chocolate Chips"), listOf("Snack")),
+        DummyRecipe("Lemon Tart", listOf("Flour", "Sugar", "Lemons", "Butter", "Eggs"), listOf("Dessert")),
+        DummyRecipe("BBQ Chicken", listOf("Chicken breasts", "Salt", "BBQ sauce"), listOf("Main Dish", "Dinner", "Lunch"))
     )
 
     // Mutable states to handle search query and filtered list
     var searchQuery by remember { mutableStateOf("") }
-    var filteredRecipes by remember { mutableStateOf(recipeNames) }
+    var filteredRecipes by remember { mutableStateOf(recipes) }
 
     // Filter functionality to sort recipes alphabetically
     // TODO: Add filter options to the function, now this function just sorts data
     fun applyFilter() {
-        filteredRecipes = filteredRecipes.sorted()
+        filteredRecipes = filteredRecipes.sortedBy { it.name }
     }
 
     // Search functionality to filter recipes based on query
     fun applySearch(query: String) {
         searchQuery = query
         filteredRecipes = if (query.isBlank()) {
-            recipeNames // Reset to full list if query is blank
+            recipes // Reset to full list if query is blank
         } else {
-            recipeNames.filter { it.contains(query, ignoreCase = true) }
+            recipes.filter {
+                it.name.contains(query, ignoreCase = true) ||
+                        it.ingredients.any { ingredient -> ingredient.contains(query, ignoreCase = true) }
+            }
         }
     }
 
@@ -122,10 +132,7 @@ fun SearchScreen(onBackClick: () -> Unit) {
                 // "Sort" button as an example of sorting functionality
                 StyledButton(
                     text = "Sort",
-                    onClick = {
-                        // TODO: Implement sorting function with options
-                        applyFilter()
-                    },
+                    onClick = { applyFilter() },
                     modifier = Modifier
                         .weight(1f)
                         .padding(start = 8.dp)
@@ -139,20 +146,31 @@ fun SearchScreen(onBackClick: () -> Unit) {
                 modifier = Modifier.fillMaxSize(),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                // Iterate through each filtered recipe
                 items(filteredRecipes) { recipe ->
-                    // Display each recipe name in a styled Text component
-                    Text(
-                        text = recipe,
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurface,
+                    Column(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(8.dp)
                             .clip(MaterialTheme.shapes.medium)
                             .background(MaterialTheme.colorScheme.surface)
-                            .padding(16.dp) // Inner padding for text readability
-                    )
+                            .padding(16.dp)
+                    ) {
+                        Text(
+                            text = recipe.name,
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Text(
+                            text = "Meal: ${recipe.mealType.joinToString(", ")}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                        )
+                        Text(
+                            text = "Ingredients: ${recipe.ingredients.joinToString(", ")}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                        )
+                    }
                 }
             }
         }
