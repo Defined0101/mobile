@@ -5,11 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -38,26 +34,20 @@ fun SearchScreen(onBackClick: () -> Unit) {
         DummyRecipe("BBQ Chicken", listOf("Chicken breasts", "Salt", "BBQ sauce"), listOf("Main Dish", "Dinner", "Lunch"))
     )
 
-    // Mutable states to handle search query and filtered list
+    // Mutable states to handle search query, meal type filter, and filtered list
     var searchQuery by remember { mutableStateOf("") }
     var filteredRecipes by remember { mutableStateOf(recipes) }
+    var selectedMealType by remember { mutableStateOf("All") }
+    val mealTypes = listOf("All", "Breakfast", "Lunch", "Dinner", "Dessert", "Snack")
+    var isDropdownExpanded by remember { mutableStateOf(false) }
 
-    // Filter functionality to sort recipes alphabetically
-    // TODO: Add filter options to the function, now this function just sorts data
-    fun applyFilter() {
-        filteredRecipes = filteredRecipes.sortedBy { it.name }
-    }
-
-    // Search functionality to filter recipes based on query
-    fun applySearch(query: String) {
-        searchQuery = query
-        filteredRecipes = if (query.isBlank()) {
-            recipes // Reset to full list if query is blank
-        } else {
-            recipes.filter {
-                it.name.contains(query, ignoreCase = true) ||
-                        it.ingredients.any { ingredient -> ingredient.contains(query, ignoreCase = true) }
-            }
+    // Function to apply both search and meal type filters
+    fun applyFilters() {
+        filteredRecipes = recipes.filter { recipe ->
+            val matchesSearchQuery = searchQuery.isBlank() || recipe.name.contains(searchQuery, ignoreCase = true) ||
+                    recipe.ingredients.any { it.contains(searchQuery, ignoreCase = true) }
+            val matchesMealType = selectedMealType == "All" || recipe.mealType.contains(selectedMealType)
+            matchesSearchQuery && matchesMealType
         }
     }
 
@@ -73,7 +63,7 @@ fun SearchScreen(onBackClick: () -> Unit) {
             contentScale = ContentScale.Crop
         )
 
-        // Column layout to arrange elements vertically on the screen
+        // Column layout to arrange elements vertically
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -81,7 +71,7 @@ fun SearchScreen(onBackClick: () -> Unit) {
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // "Go Back" button, aligned to the start
+            // "Go Back" button
             StyledButton(
                 text = "Go Back",
                 onClick = onBackClick,
@@ -90,10 +80,13 @@ fun SearchScreen(onBackClick: () -> Unit) {
                     .padding(bottom = 16.dp)
             )
 
-            // Search bar with real-time search functionality
+            // Search bar for filtering by name or ingredients
             OutlinedTextField(
                 value = searchQuery,
-                onValueChange = { applySearch(it) }, // Applies search as user types
+                onValueChange = {
+                    searchQuery = it
+                    applyFilters()
+                },
                 placeholder = {
                     Text(
                         text = "Search...",
@@ -112,40 +105,40 @@ fun SearchScreen(onBackClick: () -> Unit) {
                 )
             )
 
-            Spacer(modifier = Modifier.height(24.dp)) // Spacer to add space between search bar and buttons
+            Spacer(modifier = Modifier.height(16.dp))
 
-            // Row layout for Filter and Sort buttons
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 8.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                // "Filter" button to sort recipes alphabetically
+            // Dropdown for meal type selection
+            Box {
                 StyledButton(
-                    text = "Filter",
-                    onClick = { applyFilter() },
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(end = 8.dp)
+                    text = "Meal Type: $selectedMealType",
+                    onClick = { isDropdownExpanded = true }
                 )
-                // "Sort" button as an example of sorting functionality
-                StyledButton(
-                    text = "Sort",
-                    onClick = { applyFilter() },
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(start = 8.dp)
-                )
+                DropdownMenu(
+                    expanded = isDropdownExpanded,
+                    onDismissRequest = { isDropdownExpanded = false }
+                ) {
+                    mealTypes.forEach { type ->
+                        DropdownMenuItem(
+                            text = { Text(type) },
+                            onClick = {
+                                selectedMealType = type
+                                isDropdownExpanded = false
+                                applyFilters()
+                            }
+                        )
+                    }
+                }
             }
 
-            Spacer(modifier = Modifier.height(16.dp)) // Spacer to add space between buttons and recipe list
+            Spacer(modifier = Modifier.height(16.dp))
 
             // Display filtered recipes in a LazyColumn
             LazyColumn(
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(vertical = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
+            )  {
                 items(filteredRecipes) { recipe ->
                     Column(
                         modifier = Modifier
