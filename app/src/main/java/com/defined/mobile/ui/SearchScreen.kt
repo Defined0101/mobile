@@ -1,5 +1,6 @@
 package com.defined.mobile.ui
 
+// Your existing imports
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -19,43 +20,46 @@ import com.defined.mobile.ui.theme.StyledButton
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SearchScreen(onBackClick: () -> Unit) {
-    // Sample data: List of recipes
+    // Updated list of recipes with preparation time
     val recipes = listOf(
-        DummyRecipe("Chocolate Cake", listOf("Flour", "Sugar", "Cocoa Powder", "Eggs", "Butter"), listOf("Dessert")),
-        DummyRecipe("Apple Pie", listOf("Apples", "Flour", "Sugar", "Butter", "Cinnamon"), listOf("Dessert")),
-        DummyRecipe("Banana Bread", listOf("Bananas", "Flour", "Sugar", "Butter", "Eggs"), listOf("Dessert")),
-        DummyRecipe("Pancakes", listOf("Flour", "Milk", "Eggs", "Butter", "Sugar"), listOf("Breakfast")),
-        DummyRecipe("Waffles", listOf("Flour", "Milk", "Eggs", "Butter", "Sugar"), listOf("Breakfast")),
-        DummyRecipe("Muffins", listOf("Flour", "Sugar", "Butter", "Eggs", "Baking Powder"), listOf("Dessert")),
-        DummyRecipe("Brownies", listOf("Flour", "Sugar", "Cocoa Powder", "Butter", "Eggs"), listOf("Dessert")),
-        DummyRecipe("Cheesecake", listOf("Cream Cheese", "Sugar", "Butter", "Eggs", "Vanilla Extract"), listOf("Dessert")),
-        DummyRecipe("Cookies", listOf("Flour", "Sugar", "Butter", "Eggs", "Chocolate Chips"), listOf("Snack")),
-        DummyRecipe("Lemon Tart", listOf("Flour", "Sugar", "Lemons", "Butter", "Eggs"), listOf("Dessert")),
-        DummyRecipe("BBQ Chicken", listOf("Chicken breasts", "Salt", "BBQ sauce"), listOf("Main Dish", "Dinner", "Lunch"))
+        DummyRecipe("Chocolate Cake", listOf("Flour", "Sugar", "Cocoa Powder", "Eggs", "Butter"), listOf("Dessert"), 45),
+        DummyRecipe("Apple Pie", listOf("Apples", "Flour", "Sugar", "Butter", "Cinnamon"), listOf("Dessert"), 60),
+        DummyRecipe("Banana Bread", listOf("Bananas", "Flour", "Sugar", "Butter", "Eggs"), listOf("Dessert"), 50),
+        DummyRecipe("Pancakes", listOf("Flour", "Milk", "Eggs", "Butter", "Sugar"), listOf("Breakfast"), 15),
+        DummyRecipe("Waffles", listOf("Flour", "Milk", "Eggs", "Butter", "Sugar"), listOf("Breakfast"), 20),
+        DummyRecipe("Muffins", listOf("Flour", "Sugar", "Butter", "Eggs", "Baking Powder"), listOf("Dessert"), 30),
+        DummyRecipe("Brownies", listOf("Flour", "Sugar", "Cocoa Powder", "Butter", "Eggs"), listOf("Dessert"), 35),
+        DummyRecipe("Cheesecake", listOf("Cream Cheese", "Sugar", "Butter", "Eggs", "Vanilla Extract"), listOf("Dessert"), 90),
+        DummyRecipe("Cookies", listOf("Flour", "Sugar", "Butter", "Eggs", "Chocolate Chips"), listOf("Snack"), 25),
+        DummyRecipe("Lemon Tart", listOf("Flour", "Sugar", "Lemons", "Butter", "Eggs"), listOf("Dessert"), 40),
+        DummyRecipe("BBQ Chicken", listOf("Chicken breasts", "Salt", "BBQ sauce"), listOf("Main Dish", "Dinner", "Lunch"), 50)
     )
-
-    // Mutable states to handle search query, meal type filter, and filtered list
+    // States for search query, filters, and expanded views
     var searchQuery by remember { mutableStateOf("") }
     var filteredRecipes by remember { mutableStateOf(recipes) }
-    var selectedMealType by remember { mutableStateOf("All") }
-    val mealTypes = listOf("All", "Breakfast", "Lunch", "Dinner", "Dessert", "Snack")
-    var isDropdownExpanded by remember { mutableStateOf(false) }
+    var isFilterSectionVisible by remember { mutableStateOf(false) }
+    var isMealTypeVisible by remember { mutableStateOf(false) }
+    var isIngredientsVisible by remember { mutableStateOf(false) }
+    var selectedMealTypes by remember { mutableStateOf(mutableSetOf<String>()) }
+    var selectedIngredientFilter by remember { mutableStateOf("Any ingredient") }
 
-    // Function to apply both search and meal type filters
+    val mealTypes = listOf("Breakfast", "Lunch", "Dinner", "Dessert", "Snack")
+    val ingredientFilters = listOf("Only with my ingredients", "Any ingredient")
+
+    // Function to apply filters
     fun applyFilters() {
         filteredRecipes = recipes.filter { recipe ->
-            val matchesSearchQuery = searchQuery.isBlank() || recipe.name.contains(searchQuery, ignoreCase = true) ||
-                    recipe.ingredients.any { it.contains(searchQuery, ignoreCase = true) }
-            val matchesMealType = selectedMealType == "All" || recipe.mealType.contains(selectedMealType)
-            matchesSearchQuery && matchesMealType
+            val matchesSearchQuery = searchQuery.isBlank() || recipe.name.contains(searchQuery, ignoreCase = true)
+            val matchesMealType = selectedMealTypes.isEmpty() || selectedMealTypes.any { it in recipe.mealType }
+            val matchesIngredientFilter = when (selectedIngredientFilter) {
+                "Only with my ingredients" -> recipe.ingredients.containsAll(listOf("Flour", "Sugar")) // Example condition
+                else -> true
+            }
+            matchesSearchQuery && matchesMealType && matchesIngredientFilter
         }
     }
 
-    // Main container with full screen size
-    Box(
-        modifier = Modifier.fillMaxSize()
-    ) {
-        // Background image for consistency with MainPage
+    Box(modifier = Modifier.fillMaxSize()) {
         Image(
             painter = painterResource(id = R.drawable.background_image),
             contentDescription = null,
@@ -63,7 +67,6 @@ fun SearchScreen(onBackClick: () -> Unit) {
             contentScale = ContentScale.Crop
         )
 
-        // Column layout to arrange elements vertically
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -71,7 +74,6 @@ fun SearchScreen(onBackClick: () -> Unit) {
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // "Go Back" button
             StyledButton(
                 text = "Go Back",
                 onClick = onBackClick,
@@ -80,89 +82,112 @@ fun SearchScreen(onBackClick: () -> Unit) {
                     .padding(bottom = 16.dp)
             )
 
-            // Search bar for filtering by name or ingredients
             OutlinedTextField(
                 value = searchQuery,
                 onValueChange = {
                     searchQuery = it
                     applyFilters()
                 },
-                placeholder = {
-                    Text(
-                        text = "Search...",
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
-                        style = MaterialTheme.typography.bodyLarge
-                    )
-                },
+                placeholder = { Text("Search...") },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(MaterialTheme.shapes.medium)
-                    .background(MaterialTheme.colorScheme.surface),
-                colors = TextFieldDefaults.outlinedTextFieldColors(
-                    focusedBorderColor = MaterialTheme.colorScheme.primary,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
-                    cursorColor = MaterialTheme.colorScheme.primary
-                )
+                    .padding(vertical = 8.dp),
+                colors = TextFieldDefaults.outlinedTextFieldColors()
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            // Filter Button
+            StyledButton(
+                text = "Filter",
+                onClick = { isFilterSectionVisible = !isFilterSectionVisible },
+                modifier = Modifier.fillMaxWidth()
+            )
 
-            // Dropdown for meal type selection
-            Box {
-                StyledButton(
-                    text = "Meal Type: $selectedMealType",
-                    onClick = { isDropdownExpanded = true }
-                )
-                DropdownMenu(
-                    expanded = isDropdownExpanded,
-                    onDismissRequest = { isDropdownExpanded = false }
+            // Filter Options
+            if (isFilterSectionVisible) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp)
+                        .background(MaterialTheme.colorScheme.surface)
+                        .padding(16.dp)
                 ) {
-                    mealTypes.forEach { type ->
-                        DropdownMenuItem(
-                            text = { Text(type) },
-                            onClick = {
-                                selectedMealType = type
-                                isDropdownExpanded = false
-                                applyFilters()
+                    // Meal Type Button
+                    StyledButton(
+                        text = "Meal Type",
+                        onClick = {
+                            isMealTypeVisible = !isMealTypeVisible
+                            isIngredientsVisible = false // Close the other section
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    if (isMealTypeVisible) {
+                        // Meal Type Filters
+                        Column {
+                            mealTypes.forEach { mealType ->
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Checkbox(
+                                        checked = selectedMealTypes.contains(mealType),
+                                        onCheckedChange = {
+                                            if (it) selectedMealTypes.add(mealType)
+                                            else selectedMealTypes.remove(mealType)
+                                            applyFilters()
+                                        }
+                                    )
+                                    Text(mealType, style = MaterialTheme.typography.bodyMedium)
+                                }
                             }
-                        )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Ingredients Button
+                    StyledButton(
+                        text = "Ingredients",
+                        onClick = {
+                            isIngredientsVisible = !isIngredientsVisible
+                            isMealTypeVisible = false // Close the other section
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    if (isIngredientsVisible) {
+                        // Ingredient Filters
+                        Column {
+                            ingredientFilters.forEach { option ->
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    RadioButton(
+                                        selected = selectedIngredientFilter == option,
+                                        onClick = {
+                                            selectedIngredientFilter = option
+                                            applyFilters()
+                                        }
+                                    )
+                                    Text(option, style = MaterialTheme.typography.bodyMedium)
+                                }
+                            }
+                        }
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Display filtered recipes in a LazyColumn
+            // Recipe List
             LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(vertical = 8.dp),
+                modifier = Modifier.fillMaxSize(),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
-            )  {
+            ) {
                 items(filteredRecipes) { recipe ->
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(8.dp)
-                            .clip(MaterialTheme.shapes.medium)
                             .background(MaterialTheme.colorScheme.surface)
                             .padding(16.dp)
                     ) {
-                        Text(
-                            text = recipe.name,
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Text(
-                            text = "Meal: ${recipe.mealType.joinToString(", ")}",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-                        )
-                        Text(
-                            text = "Ingredients: ${recipe.ingredients.joinToString(", ")}",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-                        )
+                        Text(recipe.name, style = MaterialTheme.typography.bodyLarge)
+                        Text("Meal: ${recipe.mealType.joinToString(", ")}", style = MaterialTheme.typography.bodyMedium)
+                        Text("Preparation Time: ${recipe.prepTime} mins", style = MaterialTheme.typography.bodySmall)
+                        Text("Ingredients: ${recipe.ingredients.joinToString(", ")}", style = MaterialTheme.typography.bodySmall)
                     }
                 }
             }
