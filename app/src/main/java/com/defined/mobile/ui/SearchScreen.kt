@@ -42,21 +42,40 @@ fun SearchScreen(onBackClick: () -> Unit) {
     var isIngredientsVisible by remember { mutableStateOf(false) }
     var selectedMealTypes by remember { mutableStateOf(mutableSetOf<String>()) }
     var selectedIngredientFilter by remember { mutableStateOf("Any ingredient") }
+    var selectedSortOption by remember { mutableStateOf("None") }
+    var isSortDropdownExpanded by remember { mutableStateOf(false) }
 
+    // TODO: Extend the sort and filter options
     val mealTypes = listOf("Breakfast", "Lunch", "Dinner", "Dessert", "Snack")
     val ingredientFilters = listOf("Only with my ingredients", "Any ingredient")
+    val sortOptions = listOf("None", "Preparation Time (Ascending)", "Preparation Time (Descending)")
+
 
     // Function to apply filters
-    fun applyFilters() {
-        filteredRecipes = recipes.filter { recipe ->
+    fun applyFilters(recipes: List<DummyRecipe>): List<DummyRecipe> {
+        return recipes.filter { recipe ->
             val matchesSearchQuery = searchQuery.isBlank() || recipe.name.contains(searchQuery, ignoreCase = true)
             val matchesMealType = selectedMealTypes.isEmpty() || selectedMealTypes.any { it in recipe.mealType }
             val matchesIngredientFilter = when (selectedIngredientFilter) {
-                "Only with my ingredients" -> recipe.ingredients.containsAll(listOf("Flour", "Sugar")) // Example condition
+                "Only with my ingredients" -> recipe.ingredients.containsAll(listOf("Flour", "Sugar")) // TODO: Fix this part after inventory is added
                 else -> true
             }
             matchesSearchQuery && matchesMealType && matchesIngredientFilter
         }
+    }
+
+    // Function to apply sort
+    fun applySort(recipes: List<DummyRecipe>): List<DummyRecipe> {
+        return when (selectedSortOption) {
+            "Preparation Time (Ascending)" -> recipes.sortedBy { it.prepTime }
+            "Preparation Time (Descending)" -> recipes.sortedByDescending { it.prepTime }
+            else -> recipes
+        }
+    }
+    // Function to update filtered and sorted list
+    fun updateFilteredRecipes() {
+        val filtered = applyFilters(recipes)
+        filteredRecipes = applySort(filtered)
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -86,7 +105,7 @@ fun SearchScreen(onBackClick: () -> Unit) {
                 value = searchQuery,
                 onValueChange = {
                     searchQuery = it
-                    applyFilters()
+                    updateFilteredRecipes()
                 },
                 placeholder = { Text("Search...") },
                 modifier = Modifier
@@ -95,14 +114,49 @@ fun SearchScreen(onBackClick: () -> Unit) {
                 colors = TextFieldDefaults.outlinedTextFieldColors()
             )
 
-            // Filter Button
-            StyledButton(
-                text = "Filter",
-                onClick = { isFilterSectionVisible = !isFilterSectionVisible },
-                modifier = Modifier.fillMaxWidth()
-            )
+            // Row for Filter and Sort Buttons
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                // Filter Button
+                StyledButton(
+                    text = "Filter",
+                    onClick = { isFilterSectionVisible = !isFilterSectionVisible },
+                    modifier = Modifier.weight(1f)
+                )
 
-            // Filter Options
+                Spacer(modifier = Modifier.width(8.dp))
+
+                // Sort Button
+                Box(
+                    modifier = Modifier.weight(1f)
+                ) {
+                    StyledButton(
+                        text = "Sort By",
+                        onClick = { isSortDropdownExpanded = true }
+                    )
+                    DropdownMenu(
+                        expanded = isSortDropdownExpanded,
+                        onDismissRequest = { isSortDropdownExpanded = false }
+                    ) {
+                        sortOptions.forEach { option ->
+                            DropdownMenuItem(
+                                text = { Text(option) },
+                                onClick = {
+                                    selectedSortOption = option
+                                    isSortDropdownExpanded = false
+                                    updateFilteredRecipes()
+                                }
+                            )
+                        }
+                    }
+                }
+            }
+
+            // Filter Section
             if (isFilterSectionVisible) {
                 Column(
                     modifier = Modifier
@@ -122,7 +176,6 @@ fun SearchScreen(onBackClick: () -> Unit) {
                     )
 
                     if (isMealTypeVisible) {
-                        // Meal Type Filters
                         Column {
                             mealTypes.forEach { mealType ->
                                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -131,7 +184,7 @@ fun SearchScreen(onBackClick: () -> Unit) {
                                         onCheckedChange = {
                                             if (it) selectedMealTypes.add(mealType)
                                             else selectedMealTypes.remove(mealType)
-                                            applyFilters()
+                                            updateFilteredRecipes()
                                         }
                                     )
                                     Text(mealType, style = MaterialTheme.typography.bodyMedium)
@@ -153,7 +206,6 @@ fun SearchScreen(onBackClick: () -> Unit) {
                     )
 
                     if (isIngredientsVisible) {
-                        // Ingredient Filters
                         Column {
                             ingredientFilters.forEach { option ->
                                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -161,7 +213,7 @@ fun SearchScreen(onBackClick: () -> Unit) {
                                         selected = selectedIngredientFilter == option,
                                         onClick = {
                                             selectedIngredientFilter = option
-                                            applyFilters()
+                                            updateFilteredRecipes()
                                         }
                                     )
                                     Text(option, style = MaterialTheme.typography.bodyMedium)
