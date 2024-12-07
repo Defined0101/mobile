@@ -62,7 +62,8 @@ dependencies {
     implementation(libs.androidx.navigation.dynamic.features.fragment) // Dynamic features support for fragment-based navigation
 
     // Support and Compatibility Dependency
-    implementation(libs.androidx.appcompat) // Compatibility library for legacy APIs and devices
+    implementation(libs.androidx.appcompat)
+    implementation(libs.firebase.firestore.ktx) // Compatibility library for legacy APIs and devices
 
     // Testing Dependencies
     testImplementation(libs.junit) // JUnit testing framework for unit tests
