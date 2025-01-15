@@ -8,7 +8,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import com.defined.mobile.R
 
-// Define the Roboto font family with various weights for versatile text styling
 val Roboto = FontFamily(
     Font(R.font.roboto_thin, FontWeight.Thin),
     Font(R.font.roboto_light, FontWeight.Light),
@@ -18,36 +17,35 @@ val Roboto = FontFamily(
     Font(R.font.roboto_black, FontWeight.Black)
 )
 
-// Define the app-wide typography styles for consistent text appearance
 val Typography = Typography(
     displayLarge = TextStyle(
         fontFamily = Roboto,
-        fontWeight = FontWeight.Bold, // Bold for emphasis
-        fontSize = 40.sp             // Large font size for prominent display text
+        fontWeight = FontWeight.Bold,
+        fontSize = 40.sp
     ),
     displayMedium = TextStyle(
         fontFamily = Roboto,
         fontWeight = FontWeight.Bold,
-        fontSize = 34.sp             // Slightly smaller display style
+        fontSize = 34.sp
     ),
     titleLarge = TextStyle(
         fontFamily = Roboto,
         fontWeight = FontWeight.Bold,
-        fontSize = 24.sp             // Used for large titles to maintain visual hierarchy
+        fontSize = 24.sp
     ),
     titleMedium = TextStyle(
         fontFamily = Roboto,
         fontWeight = FontWeight.Medium,
-        fontSize = 20.sp             // Medium-weight title for sections and headings
+        fontSize = 20.sp
     ),
     bodyLarge = TextStyle(
         fontFamily = Roboto,
         fontWeight = FontWeight.Normal,
-        fontSize = 16.sp             // Standard body text size for readability
+        fontSize = 16.sp
     ),
     labelLarge = TextStyle(
         fontFamily = Roboto,
         fontWeight = FontWeight.Medium,
-        fontSize = 14.sp             // Smaller label style, suitable for buttons or captions
+        fontSize = 14.sp
     )
 )
