@@ -5,12 +5,9 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import com.defined.mobile.ui.LikedRecipePage
 import com.defined.mobile.ui.theme.MobileTheme
 
 class MainActivity : ComponentActivity() {
@@ -19,7 +16,15 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             MobileTheme {
+                Surface(
+                    modifier = androidx.compose.ui.Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
+                    LikedRecipePage(
+                        onBackClick = { finish() } // Closes the activity when "Go Back" is clicked
+                    )
 
+                }
             }
         }
     }
