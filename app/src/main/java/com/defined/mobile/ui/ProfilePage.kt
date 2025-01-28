@@ -63,8 +63,8 @@ fun ProfileScreen(navController: NavHostController) {
         )
         CustomButtonWithIconAndTriangle(
             text = "Saved Recipes",
-            icon = androidx.compose.material.icons.Icons.Default.ThumbUp, // bookmark doesnt exist
-            onClick = { }
+            icon = androidx.compose.material.icons.Icons.Default.ThumbUp, // TODO:bookmark doesnt exist
+            onClick = { navController.navigate("saved_recipes") }
         )
         CustomButtonWithIconAndTriangle(
             text = "Liked Recipes",

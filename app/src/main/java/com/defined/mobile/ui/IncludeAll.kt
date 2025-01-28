@@ -18,6 +18,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.defined.mobile.ui.AllergyPage
 import com.defined.mobile.ui.IngredientSearch
+import com.defined.mobile.ui.SavedRecipePage
 
 @Composable
 fun ScreenWithBottomNav() {
@@ -90,6 +91,11 @@ fun AppNavigation(navController: NavHostController) {
             IngredientSearch(
                 navController = navController,
                 onNavigateBack = { navController.popBackStack() }
+            )
+        }
+        composable("saved_recipes") {
+            SavedRecipePage(
+                onBackClick = { navController.popBackStack() }
             )
         }
     }
