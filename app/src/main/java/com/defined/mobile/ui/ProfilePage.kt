@@ -69,7 +69,7 @@ fun ProfileScreen(navController: NavHostController) {
         CustomButtonWithIconAndTriangle(
             text = "Liked Recipes",
             icon = androidx.compose.material.icons.Icons.Default.Favorite,
-            onClick = { }
+            onClick = { navController.navigate("liked_recipes") }
         )
     }
 }

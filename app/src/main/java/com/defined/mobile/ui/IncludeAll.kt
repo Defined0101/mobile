@@ -18,6 +18,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.defined.mobile.ui.AllergyPage
 import com.defined.mobile.ui.IngredientSearch
+import com.defined.mobile.ui.LikedRecipePage
 import com.defined.mobile.ui.SavedRecipePage
 
 @Composable
@@ -95,6 +96,11 @@ fun AppNavigation(navController: NavHostController) {
         }
         composable("saved_recipes") {
             SavedRecipePage(
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+        composable("liked_recipes") {
+            LikedRecipePage(
                 onBackClick = { navController.popBackStack() }
             )
         }
