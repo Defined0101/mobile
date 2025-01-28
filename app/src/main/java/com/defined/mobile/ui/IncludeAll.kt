@@ -16,6 +16,8 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.defined.mobile.ui.AllergyPage
+import com.defined.mobile.ui.IngredientSearch
 
 @Composable
 fun ScreenWithBottomNav() {
@@ -31,7 +33,6 @@ fun ScreenWithBottomNav() {
                     selectedItemIndex = index
                     when (index) {
                         3 -> navController.navigate("profile") // Navigate to Profile
-                        1 -> navController.navigate("Preferences") // Navigate to Preferences
                     }
                 },
                 selectedIndex = selectedItemIndex
@@ -55,6 +56,15 @@ fun AppNavigation(navController: NavHostController) {
     val preferencesViewModel: PreferencesViewModel = viewModel()
 
     NavHost(navController, startDestination = "profile") {
+        composable("main") {
+            ProfileScreen(navController = navController)
+        }
+        composable("search") {
+            ProfileScreen(navController = navController)
+        }
+        composable("favorites") {
+            ProfileScreen(navController = navController)
+        }
         composable("profile") {
             ProfileScreen(navController = navController)
         }
@@ -64,9 +74,21 @@ fun AppNavigation(navController: NavHostController) {
                 onSave = { /* Implement save logic */ }
             )
         }
-        composable("Preferences") {
+        composable("preferences") {
             Preferences(
                 viewModel = preferencesViewModel,
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+        composable("allergies") {
+            AllergyPage(
+                navController = navController,
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+        composable("ingredientSearch") {
+            IngredientSearch(
+                navController = navController,
                 onNavigateBack = { navController.popBackStack() }
             )
         }

@@ -54,12 +54,12 @@ fun ProfileScreen(navController: NavHostController) {
         CustomButtonWithIconAndTriangle(
             text = "Preferences",
             icon = androidx.compose.material.icons.Icons.Default.Settings,
-            onClick = { navController.navigate("Preferences") }
+            onClick = { navController.navigate("preferences") }
         )
         CustomButtonWithIconAndTriangle(
             text = "Allergies",
             icon = androidx.compose.material.icons.Icons.Default.Warning,
-            onClick = { }
+            onClick = { navController.navigate("allergies") }
         )
         CustomButtonWithIconAndTriangle(
             text = "Saved Recipes",
