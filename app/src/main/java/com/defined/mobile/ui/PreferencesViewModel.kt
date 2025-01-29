@@ -1,4 +1,4 @@
-package com.defined.mobile
+package com.defined.mobile.ui
 
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel

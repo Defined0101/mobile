@@ -4,14 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.runtime.Composable
-import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavHostController
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
-import com.defined.mobile.ui.AllergyPage
-import com.defined.mobile.ui.IngredientSearch
+import com.defined.mobile.ui.ScreenWithBottomNav
 import com.defined.mobile.ui.theme.MobileTheme
 
 class MainActivity : ComponentActivity() {
@@ -50,5 +43,3 @@ class MainActivity : ComponentActivity() {
 //        }
 //    }
 //}
-
-

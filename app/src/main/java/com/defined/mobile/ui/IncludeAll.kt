@@ -1,6 +1,5 @@
-package com.defined.mobile
+package com.defined.mobile.ui
 
-import ProfileInformation
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -16,10 +15,6 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.defined.mobile.ui.AllergyPage
-import com.defined.mobile.ui.IngredientSearch
-import com.defined.mobile.ui.LikedRecipePage
-import com.defined.mobile.ui.SavedRecipePage
 
 @Composable
 fun ScreenWithBottomNav() {
@@ -34,6 +29,9 @@ fun ScreenWithBottomNav() {
                 onItemSelected = { index ->
                     selectedItemIndex = index
                     when (index) {
+                        0 -> navController.navigate("main")
+                        1 -> navController.navigate("search/false")
+                        2 -> navController.navigate("liked_recipes/false")
                         3 -> navController.navigate("profile") // Navigate to Profile
                     }
                 },
@@ -57,12 +55,33 @@ fun AppNavigation(navController: NavHostController) {
     // Shared ViewModel for state management
     val preferencesViewModel: PreferencesViewModel = viewModel()
 
-    NavHost(navController, startDestination = "profile") {
-        composable("main") {
-            ProfileScreen(navController = navController)
+    NavHost(navController, startDestination = "login") {
+        composable("login") {
+            val viewModel: LoginViewModel = viewModel()
+            LoginPage(
+                viewModel = viewModel,
+                onSignInClick = { user ->
+                    println(user)
+                    if (user == null) {
+                        println(user)
+                        navController.navigate("main") {
+                            popUpTo("login") { inclusive = true } // Remove login page from back stack
+                        }
+                    }
+                }
+            )
         }
-        composable("search") {
-            ProfileScreen(navController = navController)
+        composable("main") {
+            MainPage(
+                onSearchClick = { navController.navigate("search/true") }
+            )
+        }
+        composable("search/{backActive}") { backStackEntry ->
+            val backActive = backStackEntry.arguments?.getString("backActive")?.toBoolean() ?: false
+            SearchScreen(
+                backActive = backActive,
+                onBackClick = { navController.popBackStack() }
+            )
         }
         composable("favorites") {
             ProfileScreen(navController = navController)
@@ -73,7 +92,7 @@ fun AppNavigation(navController: NavHostController) {
         composable("profileInformation") {
             ProfileInformation(
                 onNavigateBack = { navController.popBackStack() },
-                onSave = { /* Implement save logic */ }
+                onSave = { /* TODO: Implement save logic */ }
             )
         }
         composable("preferences") {
@@ -99,8 +118,10 @@ fun AppNavigation(navController: NavHostController) {
                 onBackClick = { navController.popBackStack() }
             )
         }
-        composable("liked_recipes") {
+        composable("liked_recipes/{backActive}") { backStackEntry ->
+            val backActive = backStackEntry.arguments?.getString("backActive")?.toBoolean() ?: false
             LikedRecipePage(
+                backActive = backActive,
                 onBackClick = { navController.popBackStack() }
             )
         }

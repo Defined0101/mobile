@@ -1,4 +1,4 @@
-package com.defined.mobile
+package com.defined.mobile.ui
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons

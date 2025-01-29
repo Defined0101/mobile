@@ -1,18 +1,15 @@
 package com.defined.mobile.ui
 
+// Your existing imports
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
@@ -21,9 +18,9 @@ import com.defined.mobile.ui.theme.StyledButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LikedRecipePage(backActive: Boolean, onBackClick: () -> Unit) {
+fun SearchScreen(backActive: Boolean, onBackClick: () -> Unit) {
     // Updated list of recipes with preparation time
-    var savedRecipes = listOf(
+    val recipes = listOf(
         DummyRecipe("Chocolate Cake", listOf("Flour", "Sugar", "Cocoa Powder", "Eggs", "Butter"), listOf("Dessert"), 45),
         DummyRecipe("Apple Pie", listOf("Apples", "Flour", "Sugar", "Butter", "Cinnamon"), listOf("Dessert"), 60),
         DummyRecipe("Banana Bread", listOf("Bananas", "Flour", "Sugar", "Butter", "Eggs"), listOf("Dessert"), 50),
@@ -34,14 +31,11 @@ fun LikedRecipePage(backActive: Boolean, onBackClick: () -> Unit) {
         DummyRecipe("Cheesecake", listOf("Cream Cheese", "Sugar", "Butter", "Eggs", "Vanilla Extract"), listOf("Dessert"), 90),
         DummyRecipe("Cookies", listOf("Flour", "Sugar", "Butter", "Eggs", "Chocolate Chips"), listOf("Snack"), 25),
         DummyRecipe("Lemon Tart", listOf("Flour", "Sugar", "Lemons", "Butter", "Eggs"), listOf("Dessert"), 40),
-        DummyRecipe("Some Delicious Food", listOf("Flour", "Sugar", "Lemons", "Butter", "Eggs"), listOf("Dessert"), 40),
         DummyRecipe("BBQ Chicken", listOf("Chicken breasts", "Salt", "BBQ sauce"), listOf("Main Dish", "Dinner", "Lunch"), 50)
     )
-    var isModified by remember { mutableStateOf(false) }
-
-// States for search query, filters, and expanded views
+    // States for search query, filters, and expanded views
     var searchQuery by remember { mutableStateOf("") }
-    var filteredRecipes by remember { mutableStateOf(savedRecipes) }
+    var filteredRecipes by remember { mutableStateOf(recipes) }
     var isFilterSectionVisible by remember { mutableStateOf(false) }
     var isMealTypeVisible by remember { mutableStateOf(false) }
     var isIngredientsVisible by remember { mutableStateOf(false) }
@@ -77,10 +71,9 @@ fun LikedRecipePage(backActive: Boolean, onBackClick: () -> Unit) {
             else -> recipes
         }
     }
-
     // Function to update filtered and sorted list
     fun updateFilteredRecipes() {
-        val filtered = applyFilters(savedRecipes)
+        val filtered = applyFilters(recipes)
         filteredRecipes = applySort(filtered)
     }
 
@@ -99,25 +92,13 @@ fun LikedRecipePage(backActive: Boolean, onBackClick: () -> Unit) {
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Top Bar
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                if (backActive) {
-                    IconButton(onClick = onBackClick) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back"
-                        )
-                    }
-                }
-                Text(
-                    text = "Liked Recipes",
-                    style = MaterialTheme.typography.titleLarge
+            if (backActive) {
+                StyledButton(
+                    text = "Go Back",
+                    onClick = onBackClick,
+                    modifier = Modifier
+                        .align(Alignment.Start)
+                        .padding(bottom = 16.dp)
                 )
             }
 
@@ -244,64 +225,24 @@ fun LikedRecipePage(backActive: Boolean, onBackClick: () -> Unit) {
                 }
             }
 
-            //TODO: Make the list scrollable
-
             // Recipe List
             LazyColumn(
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.fillMaxSize(),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                items(filteredRecipes.take(5)) { recipe ->
-                    Row(
+                items(filteredRecipes) { recipe ->
+                    Column(
                         modifier = Modifier
                             .fillMaxWidth()
                             .background(MaterialTheme.colorScheme.surface)
-                            .padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
+                            .padding(16.dp)
                     ) {
-                        Column(
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Text(recipe.name, style = MaterialTheme.typography.bodyLarge)
-                            Text("Meal: ${recipe.mealType.joinToString(", ")}", style = MaterialTheme.typography.bodyMedium)
-                            Text("Preparation Time: ${recipe.prepTime} mins", style = MaterialTheme.typography.bodySmall)
-                            Text("Ingredients: ${recipe.ingredients.joinToString(", ")}", style = MaterialTheme.typography.bodySmall)
-                        }
-
-                        IconButton(onClick = {
-                            savedRecipes = savedRecipes.filter { it != recipe }
-                            updateFilteredRecipes()
-                            isModified = true
-                        }) {
-                            Icon(
-                                imageVector = Icons.Filled.Delete,
-                                contentDescription ="Delete Recipe",
-                                tint = MaterialTheme.colorScheme.error
-                            )
-                        }
+                        Text(recipe.name, style = MaterialTheme.typography.bodyLarge)
+                        Text("Meal: ${recipe.mealType.joinToString(", ")}", style = MaterialTheme.typography.bodyMedium)
+                        Text("Preparation Time: ${recipe.prepTime} mins", style = MaterialTheme.typography.bodySmall)
+                        Text("Ingredients: ${recipe.ingredients.joinToString(", ")}", style = MaterialTheme.typography.bodySmall)
                     }
                 }
-            }
-        }
-
-        // Save Button
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.BottomEnd
-        ) {
-            Button(
-                onClick = {
-                    println("Saved Changes")
-                    isModified = false
-                },
-                enabled = isModified,
-                modifier = Modifier.padding(16.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = if (isModified) MaterialTheme.colorScheme.primary else Color.Gray
-                )
-            ) {
-                Text("Save")
             }
         }
     }
