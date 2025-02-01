@@ -17,10 +17,11 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import com.defined.mobile.R
 
 @Composable
-fun MainPage(onSearchClick: () -> Unit) {
+fun MainPage(navController: NavController, onSearchClick: () -> Unit) {
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
@@ -41,7 +42,7 @@ fun MainPage(onSearchClick: () -> Unit) {
             TopBar(onSearchClick)
             // FeaturedImage()
             CategorySection()
-            RecipeSection()
+            RecipeSection(navController)
         }
     }
 }
@@ -154,7 +155,7 @@ fun CategorySection() {
 }
 
 @Composable
-fun RecipeSection() {
+fun RecipeSection(navController: NavController) {
     // Title for recipe section
     Text(
         text = "Recipes",
@@ -172,7 +173,12 @@ fun RecipeSection() {
         verticalArrangement = Arrangement.spacedBy(6.dp) // Spacing between items
     ) {
         items(10) { index ->
-            RecipeItem("Recipe Name $index") // Placeholder recipe item
+            RecipeItem(
+                "Recipe Name $index",
+                onClick = {
+                    navController.navigate("recipePage/$index")
+                }
+            ) // Placeholder recipe item
         }
     }
 }

@@ -31,7 +31,7 @@ fun ScreenWithBottomNav() {
                     when (index) {
                         0 -> navController.navigate("main")
                         1 -> navController.navigate("search/false")
-                        2 -> navController.navigate("liked_recipes/false")
+                        2 -> navController.navigate("likedRecipes/false")
                         3 -> navController.navigate("profile") // Navigate to Profile
                     }
                 },
@@ -62,7 +62,7 @@ fun AppNavigation(navController: NavHostController) {
                 viewModel = viewModel,
                 onSignInClick = { user ->
                     println(user)
-                    if (user == null) {
+                    if (user != null) {
                         println(user)
                         navController.navigate("main") {
                             popUpTo("login") { inclusive = true } // Remove login page from back stack
@@ -73,12 +73,14 @@ fun AppNavigation(navController: NavHostController) {
         }
         composable("main") {
             MainPage(
+                navController = navController,
                 onSearchClick = { navController.navigate("search/true") }
             )
         }
         composable("search/{backActive}") { backStackEntry ->
             val backActive = backStackEntry.arguments?.getString("backActive")?.toBoolean() ?: false
             SearchScreen(
+                navController = navController,
                 backActive = backActive,
                 onBackClick = { navController.popBackStack() }
             )
@@ -113,15 +115,24 @@ fun AppNavigation(navController: NavHostController) {
                 onNavigateBack = { navController.popBackStack() }
             )
         }
-        composable("saved_recipes") {
+        composable("savedRecipes") {
             SavedRecipePage(
+                navController = navController,
                 onBackClick = { navController.popBackStack() }
             )
         }
-        composable("liked_recipes/{backActive}") { backStackEntry ->
+        composable("likedRecipes/{backActive}") { backStackEntry ->
             val backActive = backStackEntry.arguments?.getString("backActive")?.toBoolean() ?: false
             LikedRecipePage(
+                navController = navController,
                 backActive = backActive,
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+        composable("recipePage/{recipeId}") { backStackEntry ->
+            val recipeId = backStackEntry.arguments?.getString("recipe_id") ?: "0"
+            RecipePage(
+                recipeId,
                 onBackClick = { navController.popBackStack() }
             )
         }

@@ -3,9 +3,11 @@ package com.defined.mobile.ui
 // Your existing imports
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -13,12 +15,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import com.defined.mobile.R
 import com.defined.mobile.ui.theme.StyledButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SearchScreen(backActive: Boolean, onBackClick: () -> Unit) {
+fun SearchScreen(navController: NavController, backActive: Boolean, onBackClick: () -> Unit) {
     // Updated list of recipes with preparation time
     val recipes = listOf(
         DummyRecipe("Chocolate Cake", listOf("Flour", "Sugar", "Cocoa Powder", "Eggs", "Butter"), listOf("Dessert"), 45),
@@ -136,7 +139,7 @@ fun SearchScreen(backActive: Boolean, onBackClick: () -> Unit) {
                     modifier = Modifier.weight(1f)
                 ) {
                     StyledButton(
-                        text = "Sort By",
+                        text = "Sort",
                         onClick = { isSortDropdownExpanded = true }
                     )
                     DropdownMenu(
@@ -230,12 +233,15 @@ fun SearchScreen(backActive: Boolean, onBackClick: () -> Unit) {
                 modifier = Modifier.fillMaxSize(),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                items(filteredRecipes) { recipe ->
+                itemsIndexed(filteredRecipes) { index, recipe ->
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
                             .background(MaterialTheme.colorScheme.surface)
                             .padding(16.dp)
+                            .clickable {
+                                navController.navigate("recipePage/$index")
+                            }
                     ) {
                         Text(recipe.name, style = MaterialTheme.typography.bodyLarge)
                         Text("Meal: ${recipe.mealType.joinToString(", ")}", style = MaterialTheme.typography.bodyMedium)

@@ -1,5 +1,6 @@
 package com.defined.mobile.ui
 
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
@@ -35,8 +36,10 @@ fun LoginPage(
                 .addOnCompleteListener { authResult ->
                     if (authResult.isSuccessful) {
                         val user = FirebaseAuth.getInstance().currentUser
+                        Log.d("FirebaseAuth", "User: ${user?.email}, UID: ${user?.uid}")
                         onSignInClick(user) // Notify about successful login
                     } else {
+                        Log.e("FirebaseAuth", "Error: ${authResult.exception?.message}")
                         onSignInClick(null) // Notify about login failure
                     }
                 }

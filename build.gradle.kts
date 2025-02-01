@@ -4,3 +4,10 @@ plugins {
     alias(libs.plugins.kotlin.android) apply false
     alias(libs.plugins.kotlin.compose) apply false
 }
+
+// Root build.gradle.kts
+buildscript {
+    dependencies {
+        classpath(libs.google.services) // Ensure latest version
+    }
+}

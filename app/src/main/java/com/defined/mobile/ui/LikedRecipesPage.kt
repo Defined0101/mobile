@@ -2,9 +2,11 @@ package com.defined.mobile.ui
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
@@ -16,12 +18,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import com.defined.mobile.R
 import com.defined.mobile.ui.theme.StyledButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LikedRecipePage(backActive: Boolean, onBackClick: () -> Unit) {
+fun LikedRecipePage(navController: NavController, backActive: Boolean, onBackClick: () -> Unit) {
     // Updated list of recipes with preparation time
     var savedRecipes = listOf(
         DummyRecipe("Chocolate Cake", listOf("Flour", "Sugar", "Cocoa Powder", "Eggs", "Butter"), listOf("Dessert"), 45),
@@ -155,7 +158,7 @@ fun LikedRecipePage(backActive: Boolean, onBackClick: () -> Unit) {
                     modifier = Modifier.weight(1f)
                 ) {
                     StyledButton(
-                        text = "Sort By",
+                        text = "Sort",
                         onClick = { isSortDropdownExpanded = true }
                     )
                     DropdownMenu(
@@ -251,12 +254,15 @@ fun LikedRecipePage(backActive: Boolean, onBackClick: () -> Unit) {
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                items(filteredRecipes.take(5)) { recipe ->
+                itemsIndexed(filteredRecipes.take(5)) { index, recipe ->
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
                             .background(MaterialTheme.colorScheme.surface)
-                            .padding(16.dp),
+                            .padding(16.dp)
+                            .clickable {
+                                navController.navigate("recipePage/$index")
+                            },
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
