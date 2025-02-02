@@ -2,6 +2,11 @@ package com.defined.mobile.ui
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -18,13 +23,23 @@ fun RecipePage(recipeId: String, onBackClick: () -> Unit) {
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        StyledButton(
-            text = "Go Back",
-            onClick = onBackClick,
+
+        // Top Bar
+        Row(
             modifier = Modifier
-                .align(Alignment.Start)
-                .padding(bottom = 16.dp)
-        )
+                .fillMaxWidth()
+                .padding(vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            IconButton(onClick = onBackClick) {
+                Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+            }
+            Text(
+                text = recipeId,
+                style = MaterialTheme.typography.titleLarge
+            )
+        }
 
         Text("Recipe Page for: $recipeId") // TODO: Implement recipe page
     }
