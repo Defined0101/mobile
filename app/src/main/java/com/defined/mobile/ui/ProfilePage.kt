@@ -17,6 +17,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ExitToApp
+import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Settings
@@ -66,6 +69,16 @@ fun ProfileScreen(navController: NavHostController) {
             text = "Liked Recipes",
             icon = androidx.compose.material.icons.Icons.Default.Favorite,
             onClick = { navController.navigate("likedRecipes/true") }
+        )
+        CustomButtonWithIconAndTriangle(
+            text = "Logout",
+            icon = Icons.AutoMirrored.Filled.ExitToApp,
+            onClick = {
+                logOut()
+                navController.navigate("login") {
+                    popUpTo("main") { inclusive = true }
+                }
+            }
         )
     }
 }

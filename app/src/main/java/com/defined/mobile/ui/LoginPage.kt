@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 // Required imports for Google Sign-In and Firebase Authentication
 import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.common.api.ApiException
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
 // Import the custom ViewModel for Login
@@ -30,7 +31,7 @@ fun LoginPage(
     ) { result ->
         val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
         try {
-            val account = task.getResult(Exception::class.java)
+            val account = task.getResult(ApiException::class.java)
             val credential = GoogleAuthProvider.getCredential(account?.idToken, null)
             FirebaseAuth.getInstance().signInWithCredential(credential)
                 .addOnCompleteListener { authResult ->
@@ -44,6 +45,7 @@ fun LoginPage(
                     }
                 }
         } catch (e: Exception) {
+            Log.e("FirebaseAuth", "Login error: ${e.localizedMessage}")
             onSignInClick(null) // Notify about login failure
         }
     }
@@ -61,10 +63,20 @@ fun LoginPage(
             modifier = Modifier.padding(16.dp)
         )
         Button(onClick = {
-            val signInIntent = googleSignInClient.signInIntent
-            launcher.launch(signInIntent)
+            googleSignInClient.signOut().addOnCompleteListener {
+                val signInIntent = googleSignInClient.signInIntent
+                launcher.launch(signInIntent)
+            }
         }) {
             Text(text = "Sign in with Google")
         }
     }
+}
+
+fun currentUser(): FirebaseUser? {
+    return FirebaseAuth.getInstance().currentUser
+}
+
+fun logOut() {
+    FirebaseAuth.getInstance().signOut()
 }

@@ -14,29 +14,58 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 
 @Composable
 fun ScreenWithBottomNav() {
-    val items = getBottomNavItems() // Define your bottom navigation items
-    var selectedItemIndex by rememberSaveable { mutableStateOf(0) }
+    val items = getBottomNavItems()
     val navController = rememberNavController()
+
+    val routesWithoutBottomNav = setOf("login")
+
+    // Map routes to bottom nav index
+    val routeToIndex = mapOf(
+        "main" to 0,
+        "search/{backActive}" to 1,
+        "likedRecipes/{backActive}" to 2,
+        "profile" to 3,
+        "savedRecipes" to 3,
+        "profileInformation" to 3,
+        "favourites" to 3,
+        "allergies" to 3,
+        "preferences" to 3
+    )
+
+    var selectedItemIndex by rememberSaveable { mutableStateOf(0) }
+
+    // Observe current route and update selectedIndex
+    val currentBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = currentBackStackEntry?.destination?.route
+    println("current route $currentRoute")
+
+    // Determine if BottomNavBar should be shown or hidden
+    val showBottomNavBar = currentRoute !in routesWithoutBottomNav
+
+    // Update selected index based on current route
+    selectedItemIndex = routeToIndex[currentRoute] ?: 0 // Default to Home if route not mapped
 
     Scaffold(
         bottomBar = {
-            BottomNavBar(
-                items = items,
-                onItemSelected = { index ->
-                    selectedItemIndex = index
-                    when (index) {
-                        0 -> navController.navigate("main")
-                        1 -> navController.navigate("search/false")
-                        2 -> navController.navigate("likedRecipes/false")
-                        3 -> navController.navigate("profile") // Navigate to Profile
-                    }
-                },
-                selectedIndex = selectedItemIndex
-            )
+            if (showBottomNavBar)
+                BottomNavBar(
+                    items = items,
+                    onItemSelected = { index ->
+                        selectedItemIndex = index
+                        when (index) {
+                            0 -> navController.navigate("main") { launchSingleTop = true }
+                            1 -> navController.navigate("search/false") { launchSingleTop = true }
+                            2 -> navController.navigate("likedRecipes/false") { launchSingleTop = true }
+                            3 -> navController.navigate("profile") { launchSingleTop = true }
+                        }
+                    },
+                    selectedIndex = selectedItemIndex
+                )
         },
         content = { paddingValues ->
             Box(
@@ -55,15 +84,25 @@ fun AppNavigation(navController: NavHostController) {
     // Shared ViewModel for state management
     val preferencesViewModel: PreferencesViewModel = viewModel()
 
-    NavHost(navController, startDestination = "login") {
+    val currentUser = currentUser()
+
+    if (currentUser != null)
+        println("${currentUser.displayName} already logged in.")
+
+    val startDestination = if (currentUser != null) "main" else "login"
+
+    NavHost(navController, startDestination = startDestination) {
         composable("login") {
             val viewModel: LoginViewModel = viewModel()
             LoginPage(
                 viewModel = viewModel,
                 onSignInClick = { user ->
-                    println(user)
                     if (user != null) {
-                        println(user)
+                        println(user.uid)
+                        println(user.displayName)
+                        println(user.email)
+                    }
+                    if (user != null) {
                         navController.navigate("main") {
                             popUpTo("login") { inclusive = true } // Remove login page from back stack
                         }
