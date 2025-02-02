@@ -234,20 +234,26 @@ fun SearchScreen(navController: NavController, backActive: Boolean, onBackClick:
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 itemsIndexed(filteredRecipes) { index, recipe ->
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(MaterialTheme.colorScheme.surface)
-                            .padding(16.dp)
-                            .clickable {
-                                navController.navigate("recipePage/$index")
-                            }
-                    ) {
-                        Text(recipe.name, style = MaterialTheme.typography.bodyLarge)
-                        Text("Meal: ${recipe.mealType.joinToString(", ")}", style = MaterialTheme.typography.bodyMedium)
-                        Text("Preparation Time: ${recipe.prepTime} mins", style = MaterialTheme.typography.bodySmall)
-                        Text("Ingredients: ${recipe.ingredients.joinToString(", ")}", style = MaterialTheme.typography.bodySmall)
-                    }
+                    RecipeItem(
+                        recipe = recipe,
+                        onClick = {
+                            navController.navigate("recipePage/$index")
+                        }
+                    )
+//                    Column(
+//                        modifier = Modifier
+//                            .fillMaxWidth()
+//                            .background(MaterialTheme.colorScheme.surface)
+//                            .padding(16.dp)
+//                            .clickable {
+//                                navController.navigate("recipePage/$index")
+//                            }
+//                    ) {
+//                        Text(recipe.name, style = MaterialTheme.typography.bodyLarge)
+//                        Text("Meal: ${recipe.mealType.joinToString(", ")}", style = MaterialTheme.typography.bodyMedium)
+//                        Text("Preparation Time: ${recipe.prepTime} mins", style = MaterialTheme.typography.bodySmall)
+//                        Text("Ingredients: ${recipe.ingredients.joinToString(", ")}", style = MaterialTheme.typography.bodySmall)
+//                    }
                 }
             }
         }

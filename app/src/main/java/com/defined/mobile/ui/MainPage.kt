@@ -174,11 +174,11 @@ fun RecipeSection(navController: NavController) {
     ) {
         items(10) { index ->
             RecipeItem(
-                "Recipe Name $index",
+                DummyRecipe(name = "Recipe Name $index", listOf(""), listOf(""), 0),
                 onClick = {
                     navController.navigate("recipePage/$index")
                 }
-            ) // Placeholder recipe item
+            )
         }
     }
 }

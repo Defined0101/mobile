@@ -18,15 +18,18 @@ import com.defined.mobile.R
 
 @Composable
 fun RecipeItem(
-    name: String,
-    description: String = "A delicious recipe to try!", // Default description text
-    onClick: () -> Unit = {} // Optional onClick action, defaults to no action
+    recipe: DummyRecipe, // Default description text
+    onClick: () -> Unit = {}, // Optional onClick action, defaults to no action
+
 ) {
     // Card container for the recipe item
     Card(
         modifier = Modifier
             .fillMaxWidth() // Card takes full width of its container
-            .padding(vertical = 4.dp, horizontal = 8.dp) // Adds vertical and horizontal padding around the card
+            .padding(
+                vertical = 4.dp,
+                horizontal = 8.dp
+            ) // Adds vertical and horizontal padding around the card
             .clickable { onClick() }, // Makes the card clickable
         shape = RoundedCornerShape(16.dp), // Rounded corners for a modern appearance
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
@@ -40,7 +43,7 @@ fun RecipeItem(
             // Recipe Image with rounded corners
             Image(
                 painter = painterResource(id = R.drawable.ic_launcher_foreground),
-                contentDescription = name, // Accessibility description
+                contentDescription = recipe.name, // Accessibility description
                 contentScale = ContentScale.Crop, // Scales image to fill space without distortion
                 modifier = Modifier
                     .size(80.dp) // Fixed size for image
@@ -55,7 +58,7 @@ fun RecipeItem(
             ) {
                 // Recipe Title
                 Text(
-                    text = name,
+                    text = recipe.name,
                     style = MaterialTheme.typography.titleMedium.copy(
                         fontWeight = FontWeight.Bold, // Bold for emphasis
                         fontSize = 18.sp, // Font size for readability
@@ -63,11 +66,23 @@ fun RecipeItem(
                     )
                 )
 
-                Spacer(modifier = Modifier.height(4.dp)) // Spacer to add vertical space between title and description
+                Spacer(modifier = Modifier.height(2.dp)) // Spacer to add vertical space between title and description
+
+                // Recipe Category
+                Text(
+                    text = "${recipe.prepTime} minutes",
+                    style = MaterialTheme.typography.bodySmall.copy(
+                        fontSize = 14.sp, // Smaller font size for description
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f) // Slightly transparent color for subdued look
+                    ),
+                    maxLines = 2 // Limits text to 2 lines to keep layout compact
+                )
+
+                Spacer(modifier = Modifier.height(2.dp)) // Spacer to add vertical space between title and description
 
                 // Recipe Description
                 Text(
-                    text = description,
+                    text = recipe.mealType.joinToString(", "),
                     style = MaterialTheme.typography.bodySmall.copy(
                         fontSize = 14.sp, // Smaller font size for description
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f) // Slightly transparent color for subdued look
