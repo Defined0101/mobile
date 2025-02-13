@@ -37,7 +37,7 @@ import androidx.navigation.NavHostController
 
 // Profile screen with a column of custom buttons
 @Composable
-fun ProfileScreen(navController: NavHostController) {
+fun ProfileScreen(navController: NavHostController, viewModel: LoginViewModel) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -79,7 +79,7 @@ fun ProfileScreen(navController: NavHostController) {
             text = "Logout",
             icon = Icons.AutoMirrored.Filled.ExitToApp,
             onClick = {
-                logOut()
+                viewModel.logOut()
                 navController.navigate("login") {
                     popUpTo("main") { inclusive = true }
                 }

@@ -84,7 +84,9 @@ fun AppNavigation(navController: NavHostController) {
     // Shared ViewModel for state management
     val preferencesViewModel: PreferencesViewModel = viewModel()
 
-    val currentUser = currentUser()
+    val viewModel: LoginViewModel = viewModel()
+
+    val currentUser = viewModel.currentUser()
 
     if (currentUser != null)
         println("${currentUser.displayName} already logged in.")
@@ -93,7 +95,6 @@ fun AppNavigation(navController: NavHostController) {
 
     NavHost(navController, startDestination = startDestination) {
         composable("login") {
-            val viewModel: LoginViewModel = viewModel()
             LoginPage(
                 viewModel = viewModel,
                 onSignInClick = { user ->
@@ -125,10 +126,10 @@ fun AppNavigation(navController: NavHostController) {
             )
         }
         composable("favorites") {
-            ProfileScreen(navController = navController)
+            ProfileScreen(navController = navController, viewModel = viewModel)
         }
         composable("profile") {
-            ProfileScreen(navController = navController)
+            ProfileScreen(navController = navController, viewModel = viewModel)
         }
         composable("profileInformation") {
             ProfileInformation(
