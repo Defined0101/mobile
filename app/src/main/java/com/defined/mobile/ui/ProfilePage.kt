@@ -47,27 +47,32 @@ fun ProfileScreen(navController: NavHostController) {
     ) {
         CustomButtonWithIconAndTriangle(
             text = "Profile Information",
-            icon = androidx.compose.material.icons.Icons.Default.Person,
+            icon = Icons.Default.Person,
             onClick = { navController.navigate("profileInformation") }
         )
         CustomButtonWithIconAndTriangle(
             text = "Preferences",
-            icon = androidx.compose.material.icons.Icons.Default.Settings,
+            icon = Icons.Default.Settings,
             onClick = { navController.navigate("preferences") }
         )
         CustomButtonWithIconAndTriangle(
+            text = "Ingredients",
+            icon = Icons.Default.Settings,
+            onClick = { /*navController.navigate("ingredients")*/ }
+        )
+        CustomButtonWithIconAndTriangle(
             text = "Allergies",
-            icon = androidx.compose.material.icons.Icons.Default.Warning,
+            icon = Icons.Default.Warning,
             onClick = { navController.navigate("allergies") }
         )
         CustomButtonWithIconAndTriangle(
             text = "Saved Recipes",
-            icon = androidx.compose.material.icons.Icons.Default.ThumbUp, // TODO:bookmark doesnt exist
+            icon = Icons.Default.ThumbUp, // TODO:bookmark doesnt exist
             onClick = { navController.navigate("savedRecipes") }
         )
         CustomButtonWithIconAndTriangle(
             text = "Liked Recipes",
-            icon = androidx.compose.material.icons.Icons.Default.Favorite,
+            icon = Icons.Default.Favorite,
             onClick = { navController.navigate("likedRecipes/true") }
         )
         CustomButtonWithIconAndTriangle(

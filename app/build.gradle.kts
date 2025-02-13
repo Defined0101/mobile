@@ -46,6 +46,7 @@ dependencies {
     implementation(libs.androidx.core.ktx) // Kotlin extensions for basic Android APIs
     implementation(libs.androidx.lifecycle.runtime.ktx) // Lifecycle management with Kotlin extensions
     implementation(libs.androidx.activity.compose) // Integrates Activity management with Compose
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
 
     // Jetpack Compose Dependencies
     implementation(platform(libs.androidx.compose.bom)) // BOM (Bill of Materials) for consistent Compose versions
@@ -84,4 +85,8 @@ dependencies {
 
     // Also add the dependency for the Google Play services library and specify its version
     implementation(libs.play.services.auth)
+
+    // Backend Connection Dependencies
+    implementation(libs.retrofit)
+    implementation(libs.converter.gson)
 }

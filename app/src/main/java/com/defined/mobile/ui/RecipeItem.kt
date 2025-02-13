@@ -15,10 +15,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.defined.mobile.R
+import com.defined.mobile.entities.Recipe
 
 @Composable
 fun RecipeItem(
-    recipe: DummyRecipe, // Default description text
+    recipe: Recipe,
     onClick: () -> Unit = {}, // Optional onClick action, defaults to no action
 
 ) {
@@ -43,7 +44,7 @@ fun RecipeItem(
             // Recipe Image with rounded corners
             Image(
                 painter = painterResource(id = R.drawable.ic_launcher_foreground),
-                contentDescription = recipe.name, // Accessibility description
+                contentDescription = recipe.Name, // Accessibility description
                 contentScale = ContentScale.Crop, // Scales image to fill space without distortion
                 modifier = Modifier
                     .size(80.dp) // Fixed size for image
@@ -58,7 +59,7 @@ fun RecipeItem(
             ) {
                 // Recipe Title
                 Text(
-                    text = recipe.name,
+                    text = recipe.Name,
                     style = MaterialTheme.typography.titleMedium.copy(
                         fontWeight = FontWeight.Bold, // Bold for emphasis
                         fontSize = 18.sp, // Font size for readability
@@ -70,7 +71,7 @@ fun RecipeItem(
 
                 // Recipe Category
                 Text(
-                    text = "${recipe.prepTime} minutes",
+                    text = "${recipe.TotalTime} minutes",
                     style = MaterialTheme.typography.bodySmall.copy(
                         fontSize = 14.sp, // Smaller font size for description
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f) // Slightly transparent color for subdued look
@@ -82,7 +83,7 @@ fun RecipeItem(
 
                 // Recipe Description
                 Text(
-                    text = recipe.mealType.joinToString(", "),
+                    text = recipe.Label.joinToString(", "),
                     style = MaterialTheme.typography.bodySmall.copy(
                         fontSize = 14.sp, // Smaller font size for description
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f) // Slightly transparent color for subdued look
