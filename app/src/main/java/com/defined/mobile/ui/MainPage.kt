@@ -6,6 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
@@ -19,6 +20,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.defined.mobile.R
+import com.defined.mobile.backend.CategoryViewModel
+import com.defined.mobile.backend.RecipeViewModel
 
 @Composable
 fun MainPage(navController: NavController, onSearchClick: () -> Unit) {
@@ -131,7 +134,9 @@ fun MainPageDivider() {
 }
 
 @Composable
-fun CategorySection() {
+fun CategorySection(viewModel: CategoryViewModel = androidx.lifecycle.viewmodel.compose.viewModel()) {
+    val categories by viewModel.categories.collectAsState()
+
     // Title for category section
     Text(
         text = "Categories",
@@ -148,14 +153,16 @@ fun CategorySection() {
         contentPadding = PaddingValues(horizontal = 6.dp), // Padding for content
         horizontalArrangement = Arrangement.spacedBy(6.dp) // Spacing between items
     ) {
-        items(10) { index ->
-            CategoryItem("Sample $index") // Placeholder category item
+        items(categories) { index ->
+            CategoryItem(index) // Placeholder category item
         }
     }
 }
 
 @Composable
-fun RecipeSection(navController: NavController) {
+fun RecipeSection(navController: NavController, viewModel: RecipeViewModel = androidx.lifecycle.viewmodel.compose.viewModel()) {
+    val recipes by viewModel.recipes.collectAsState()
+
     // Title for recipe section
     Text(
         text = "Recipes",
@@ -172,11 +179,11 @@ fun RecipeSection(navController: NavController) {
         contentPadding = PaddingValues(vertical = 6.dp), // Padding for content
         verticalArrangement = Arrangement.spacedBy(6.dp) // Spacing between items
     ) {
-        items(10) { index ->
+        items(recipes) { recipe ->
             RecipeItem(
-                DummyRecipe(name = "Recipe Name $index", listOf(""), listOf(""), 0),
+                recipe,
                 onClick = {
-                    navController.navigate("recipePage/$index")
+                    navController.navigate("recipePage/${recipe.ID}")
                 }
             )
         }
