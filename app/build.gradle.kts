@@ -41,7 +41,7 @@ android {
 }
 
 dependencies {
-
+    implementation("com.composables:icons-lucide:1.0.0")
     // Core AndroidX Dependencies
     implementation(libs.androidx.core.ktx) // Kotlin extensions for basic Android APIs
     implementation(libs.androidx.lifecycle.runtime.ktx) // Lifecycle management with Kotlin extensions
