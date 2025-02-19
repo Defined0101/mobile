@@ -88,8 +88,10 @@ fun AppNavigation(navController: NavHostController) {
 
     val currentUser = viewModel.currentUser()
 
-    if (currentUser != null)
+    if (currentUser != null) {
         println("${currentUser.displayName} already logged in.")
+        println("${currentUser.email} already logged in.")
+    }
 
     val startDestination = if (currentUser != null) "main" else "login"
 

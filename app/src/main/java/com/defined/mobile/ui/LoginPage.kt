@@ -13,6 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.defined.mobile.R
@@ -26,11 +27,15 @@ fun LoginPage(
     onSignInClick: (FirebaseUser?) -> Unit
 ) {
     var isRegistering by remember { mutableStateOf(false) }
+    var isEmailSent by remember { mutableStateOf(false) }
 
     if (isRegistering) {
-        RegisterScreen(viewModel, onSignInClick) { isRegistering = false }
+        RegisterScreen(viewModel, {
+            isRegistering = false
+            isEmailSent = true
+        }) { isRegistering = false }
     } else {
-        LoginScreen(viewModel, onSignInClick) { isRegistering = true }
+        LoginScreen(viewModel, onSignInClick, { isRegistering = true }, isEmailSent)
     }
 }
 
@@ -39,7 +44,8 @@ fun LoginPage(
 fun LoginScreen(
     viewModel: LoginViewModel,
     onSignInClick: (FirebaseUser?) -> Unit,
-    onRegisterClick: () -> Unit
+    onRegisterClick: () -> Unit,
+    isEmailSent: Boolean = false
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -90,7 +96,8 @@ fun LoginScreen(
             onValueChange = { password = it },
             label = { Text("Password") },
             isError = attemptedLogin && password.isBlank(),
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            visualTransformation = PasswordVisualTransformation()
         )
         if (attemptedLogin && password.isBlank()) {
             Text("Password cannot be empty", color = MaterialTheme.colorScheme.error)
@@ -98,8 +105,9 @@ fun LoginScreen(
 
         Button(
             onClick = {
+                attemptedLogin = true
                 if (email.isBlank() || password.isBlank()) {
-                    errorMessage = "Email and password cannot be empty"
+                    errorMessage = ""
                 } else {
                     viewModel.signInWithEmail(email, password) { user, error ->
                         if (user != null) {
@@ -112,14 +120,14 @@ fun LoginScreen(
             },
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Sign in with Email")
+            Text("Sign in")
         }
 
         Button(
             onClick = onRegisterClick,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Register")
+            Text("Sign Up")
         }
 
         GoogleSignInButton {
@@ -131,6 +139,13 @@ fun LoginScreen(
 
         errorMessage?.let {
             Text(text = it, color = MaterialTheme.colorScheme.error)
+        }
+
+        if (isEmailSent) {
+            Text(
+                text = "A verification email has been sent. Please check your inbox!",
+                color = MaterialTheme.colorScheme.primary
+            )
         }
     }
 }
@@ -162,7 +177,7 @@ fun GoogleSignInButton(onClick: () -> Unit) {
             Spacer(modifier = Modifier.width(8.dp))
             Text(
                 text = "Sign in with Google",
-                color = Color.Black // Yazıyı siyah yap
+                color = Color.Black
             )
         }
     }
@@ -172,13 +187,14 @@ fun GoogleSignInButton(onClick: () -> Unit) {
 @Composable
 fun RegisterScreen(
     viewModel: LoginViewModel,
-    onSignInClick: (FirebaseUser?) -> Unit,
+    onSignUpClick: () -> Unit,
     onBackToLogin: () -> Unit
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var isEmailSent by remember { mutableStateOf(false) }
+    var attemptedLogin by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
@@ -187,7 +203,7 @@ fun RegisterScreen(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text("REGISTER", style = MaterialTheme.typography.headlineMedium)
+        Text("SIGN UP", style = MaterialTheme.typography.headlineMedium)
 
         OutlinedTextField(
             value = email,
@@ -195,21 +211,33 @@ fun RegisterScreen(
             label = { Text("Email") },
             modifier = Modifier.fillMaxWidth()
         )
+        if (attemptedLogin && email.isBlank()) {
+            Text("Email cannot be empty", color = MaterialTheme.colorScheme.error)
+        }
 
         OutlinedTextField(
             value = password,
             onValueChange = { password = it },
             label = { Text("Password") },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            visualTransformation = PasswordVisualTransformation()
         )
+        if (attemptedLogin && password.isBlank()) {
+            Text("Password cannot be empty", color = MaterialTheme.colorScheme.error)
+        }
 
         Button(
             onClick = {
-                viewModel.signUpWithEmail(email, password) { user, error ->
-                    if (user != null) {
-                        isEmailSent = true
-                    } else {
-                        errorMessage = error
+                if (email.isBlank() || password.isBlank()) {
+                    errorMessage = ""
+                } else {
+                    viewModel.signUpWithEmail(email, password) { user, error ->
+                        if (user != null) {
+                            isEmailSent = true
+                            onSignUpClick()
+                        } else {
+                            errorMessage = error
+                        }
                     }
                 }
             },
