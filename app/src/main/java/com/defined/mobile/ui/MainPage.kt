@@ -22,31 +22,21 @@ import androidx.navigation.NavController
 import com.defined.mobile.R
 import com.defined.mobile.backend.CategoryViewModel
 import com.defined.mobile.backend.RecipeViewModel
+import com.defined.mobile.ui.theme.*
 
 @Composable
 fun MainPage(navController: NavController, onSearchClick: () -> Unit) {
-    Box(
-        modifier = Modifier.fillMaxSize()
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp), // Instead of individual Spacer
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Image(
-            painter = painterResource(id = R.drawable.background_image),
-            contentDescription = "Background image",
-            modifier = Modifier.fillMaxSize(),
-            contentScale = ContentScale.Crop
-        )
-
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp), // Instead of individual Spacer
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            TopBar(onSearchClick)
-            // FeaturedImage()
-            CategorySection()
-            RecipeSection(navController)
-        }
+        TopBar(onSearchClick)
+        // FeaturedImage()
+        CategorySection()
+        RecipeSection(navController)
     }
 }
 
@@ -93,8 +83,7 @@ fun TopBar(onSearchClick: () -> Unit) {
         Text(
             text = "Welcome",
             style = MaterialTheme.typography.titleLarge.copy(
-                color = MaterialTheme.colorScheme.primary,
-                fontWeight = FontWeight.Bold
+                color = MaterialTheme.colorScheme.primary
             ),
             modifier = Modifier.padding(bottom = 4.dp) // Padding below text
         )
@@ -141,8 +130,7 @@ fun CategorySection(viewModel: CategoryViewModel = androidx.lifecycle.viewmodel.
     Text(
         text = "Categories",
         style = MaterialTheme.typography.titleLarge.copy(
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Bold,
+            fontSize = fontLarge,
             color = MaterialTheme.colorScheme.primary
         ),
         modifier = Modifier.padding(vertical = 6.dp)
@@ -167,8 +155,7 @@ fun RecipeSection(navController: NavController, viewModel: RecipeViewModel = and
     Text(
         text = "Recipes",
         style = MaterialTheme.typography.titleLarge.copy(
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Bold,
+            fontSize = fontLarge,
             color = MaterialTheme.colorScheme.primary
         ),
         modifier = Modifier.padding(vertical = 6.dp)

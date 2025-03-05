@@ -3,10 +3,7 @@ package com.defined.mobile.ui
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
@@ -25,7 +22,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import com.defined.mobile.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -36,17 +33,19 @@ fun ProfileInformation(onNavigateBack: () -> Unit, onSave: () -> Unit) {
     var email by rememberSaveable { mutableStateOf("info@aplusdesign.co") }
     var password by rememberSaveable { mutableStateOf("Password") }
 
-
-
     Scaffold(
+        containerColor = TransparentColor,
         topBar = {
             TopAppBar(
-                title = { Text(text = "Profile Information") },
+                title = { Text(text = "Profile Information", color = MaterialTheme.colorScheme.onSecondary) },
                 navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                    }
-                }
+                    BackButton(onNavigateBack)
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = TransparentColor, // Remove default background
+                    titleContentColor = MaterialTheme.colorScheme.onPrimary, // Adjust text color
+                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimary // Adjust icon color
+                )
             )
         }
     ) { innerPadding ->
@@ -55,34 +54,15 @@ fun ProfileInformation(onNavigateBack: () -> Unit, onSave: () -> Unit) {
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            // Top profile section
             Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(200.dp)
-                    .background(
-                        brush = Brush.verticalGradient(
-                            colors = listOf(Color(0xFF6A1B9A), Color(0xFF8E24AA))
-                        )
-                    ),
+                modifier = Modifier.fillMaxWidth(),
                 contentAlignment = Alignment.Center
             ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Box(
-                        modifier = Modifier
-                            .size(80.dp)
-                            .background(Color.White, CircleShape),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Person,
-                            contentDescription = "Profile Icon",
-                            tint = Color.Gray
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(text = name, color = Color.White, fontSize = 20.sp)
-                }
+                Text(
+                    text = name,
+                    color = MaterialTheme.colorScheme.onSecondary,
+                    fontSize = fontLarge
+                )
             }
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -98,26 +78,7 @@ fun ProfileInformation(onNavigateBack: () -> Unit, onSave: () -> Unit) {
             Spacer(modifier = Modifier.weight(1f))
 
             // Bottom button with gradient
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)
-                    .height(60.dp) // Increased height
-                    .background(
-                        brush = Brush.horizontalGradient(
-                            colors = listOf(Color(0xFF6A1B9A), Color(0xFF8E24AA))
-                        ),
-                        shape = RoundedCornerShape(30.dp) // Slightly more rounded
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "Edit Profile",
-                    color = Color.White,
-                    fontSize = 18.sp, // Increased font size
-                    modifier = Modifier.clickable(onClick = onSave)
-                )
-            }
+            EditButton(onClick = onSave)
         }
     }
 }
@@ -125,7 +86,7 @@ fun ProfileInformation(onNavigateBack: () -> Unit, onSave: () -> Unit) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileInfoRow(icon: ImageVector, label: String, value: String, onValueChange: (String) -> Unit) {
-    val shape = RoundedCornerShape(16.dp) // Define a more rounded shape
+    val shape = MaterialTheme.shapes.medium // Define a more rounded shape
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -160,12 +121,12 @@ fun ProfileInfoRow(icon: ImageVector, label: String, value: String, onValueChang
             TextField(
                 value = value,
                 onValueChange = onValueChange,
-                placeholder = { Text(text = label, color = Color.Gray) }, // Add placeholder for clarity
+                placeholder = { Text(text = label) }, // Add placeholder for clarity
                 modifier = Modifier.fillMaxWidth(),
                 colors = TextFieldDefaults.textFieldColors(
-                    containerColor = Color.Transparent, // Make the container transparent
-                    focusedIndicatorColor = Color.Transparent, // Remove underline
-                    unfocusedIndicatorColor = Color.Transparent
+                    containerColor = TransparentColor, // Make the container transparent
+                    focusedIndicatorColor = TransparentColor, // Remove underline
+                    unfocusedIndicatorColor = TransparentColor
                 ),
                 textStyle = LocalTextStyle.current.copy(color = MaterialTheme.colorScheme.onSurface)
             )

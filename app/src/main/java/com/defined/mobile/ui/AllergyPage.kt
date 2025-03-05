@@ -2,20 +2,18 @@ package com.defined.mobile.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
+import com.defined.mobile.ui.theme.*
+
+// doesnt save allergies. only one allergy is displayed.
 
 //TODO: Connect to database
 //TODO: Only one ingredient can be selected. After db connection fix it to multiple
@@ -28,6 +26,8 @@ fun AllergyPage(
 ) {
     val allergicIngredients = remember { mutableStateListOf<Ingredients>() }
     var isModified by remember { mutableStateOf(false) }
+
+    var showDiscardDialog by remember { mutableStateOf(false) } // State for discard confirmation dialog
 
     // Observe navigation result
     val navBackStackEntry = navController.currentBackStackEntryAsState().value
@@ -56,9 +56,13 @@ fun AllergyPage(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            IconButton(onClick = onNavigateBack) {
-                Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-            }
+            BackButton(onNavigateBack = {
+                if (isModified) {
+                    showDiscardDialog = true // Show dialog if there are unsaved changes
+                } else {
+                    onNavigateBack() // Navigate back without confirmation
+                }
+            })
             Text(
                 text = "Allergies",
                 style = MaterialTheme.typography.titleLarge
@@ -79,7 +83,9 @@ fun AllergyPage(
         ) {
             Text(
                 text = "Your Allergies",
-                style = MaterialTheme.typography.bodyLarge.copy(fontSize = 18.sp)
+                style = MaterialTheme.typography.bodyLarge.copy(
+                    fontSize = fontMedium
+                )
             )
         }
 
@@ -93,8 +99,8 @@ fun AllergyPage(
                     modifier = Modifier
                         .fillMaxWidth()
                         .background(
-                            color = Color(0xFF4CAF50), // Green for active allergies
-                            shape = RoundedCornerShape(8.dp)
+                            color = brightGreen, // Green for active allergies
+                            shape = MaterialTheme.shapes.extraSmall
                         )
                         .padding(horizontal = 16.dp, vertical = 12.dp),
                     verticalAlignment = Alignment.CenterVertically
@@ -103,21 +109,16 @@ fun AllergyPage(
                         text = item.name,
                         modifier = Modifier.weight(1f),
                         style = MaterialTheme.typography.bodyLarge.copy(
-                            color = Color.White
+                            color = MaterialTheme.colorScheme.onPrimary
                         )
                     )
-                    IconButton(
+                    DeleteButton(
                         onClick = {
                             allergicIngredients.removeAt(index)
                             isModified = true
-                        }
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.Delete,
-                            contentDescription = "Delete Allergy",
-                            tint = Color.White
-                        )
-                    }
+                        },
+                        contentDescription = "Delete Allergy"
+                    )
                 }
             }
         }
@@ -127,19 +128,24 @@ fun AllergyPage(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.BottomEnd
         ) {
-            Button(
+            SaveButton(
                 onClick = {
                     println("Saved Allergies: ${allergicIngredients.map { it.name }}")
                     isModified = false
                 },
-                enabled = isModified,
-                modifier = Modifier.padding(16.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = if (isModified) MaterialTheme.colorScheme.primary else Color.Gray
-                )
-            ) {
-                Text("Save")
-            }
+                isEnabled = isModified
+            )
         }
+    }
+
+    // Show discard dialog if there are unsaved changes
+    if (showDiscardDialog) {
+        UnsavedChangesDialog(
+            onDismiss = { showDiscardDialog = false },
+            onConfirmLeave = {
+                showDiscardDialog = false
+                onNavigateBack()
+            }
+        )
     }
 }

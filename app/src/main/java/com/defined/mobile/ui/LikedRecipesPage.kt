@@ -1,26 +1,21 @@
 package com.defined.mobile.ui
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.defined.mobile.R
 import com.defined.mobile.backend.RecipeViewModel
 import com.defined.mobile.entities.Recipe
+import com.defined.mobile.ui.theme.BackButton
+import com.defined.mobile.ui.theme.DeleteButton
+import com.defined.mobile.ui.theme.SaveButton
 import com.defined.mobile.ui.theme.StyledButton
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -76,228 +71,205 @@ fun LikedRecipePage(navController: NavController, backActive: Boolean, onBackCli
         filteredRecipes = applySort(filtered)
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        Image(
-            painter = painterResource(id = R.drawable.background_image),
-            contentDescription = null,
-            modifier = Modifier.fillMaxSize(),
-            contentScale = ContentScale.Crop
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        verticalArrangement = Arrangement.Top,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        // Top Bar
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            if (backActive) {
+                BackButton(onBackClick)
+            }
+            Text(
+                text = "Liked Recipes",
+                style = MaterialTheme.typography.titleLarge
+            )
+        }
+
+        OutlinedTextField(
+            value = searchQuery,
+            onValueChange = {
+                searchQuery = it
+                updateFilteredRecipes()
+            },
+            placeholder = { Text("Search...") },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp),
+            colors = TextFieldDefaults.outlinedTextFieldColors()
         )
 
-        Column(
+        // Row for Filter and Sort Buttons
+        Row(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.Top,
-            horizontalAlignment = Alignment.CenterHorizontally
+                .fillMaxWidth()
+                .padding(vertical = 8.dp),
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            // Top Bar
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
+            // Filter Button
+            StyledButton(
+                text = "Filter",
+                onClick = { isFilterSectionVisible = !isFilterSectionVisible },
+                modifier = Modifier.weight(1f)
+            )
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            // Sort Button
+            Box(
+                modifier = Modifier.weight(1f)
             ) {
-                if (backActive) {
-                    IconButton(onClick = onBackClick) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back"
+                StyledButton(
+                    text = "Sort",
+                    onClick = { isSortDropdownExpanded = true }
+                )
+                DropdownMenu(
+                    expanded = isSortDropdownExpanded,
+                    onDismissRequest = { isSortDropdownExpanded = false }
+                ) {
+                    sortOptions.forEach { option ->
+                        DropdownMenuItem(
+                            text = { Text(option) },
+                            onClick = {
+                                selectedSortOption = option
+                                isSortDropdownExpanded = false
+                                updateFilteredRecipes()
+                            }
                         )
                     }
                 }
-                Text(
-                    text = "Liked Recipes",
-                    style = MaterialTheme.typography.titleLarge
-                )
             }
+        }
 
-            OutlinedTextField(
-                value = searchQuery,
-                onValueChange = {
-                    searchQuery = it
-                    updateFilteredRecipes()
-                },
-                placeholder = { Text("Search...") },
+        // Filter Section
+        if (isFilterSectionVisible) {
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 8.dp),
-                colors = TextFieldDefaults.outlinedTextFieldColors()
-            )
-
-            // Row for Filter and Sort Buttons
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
+                    .padding(vertical = 8.dp)
+                    .background(MaterialTheme.colorScheme.surface)
+                    .padding(16.dp)
             ) {
-                // Filter Button
+                // Meal Type Button
                 StyledButton(
-                    text = "Filter",
-                    onClick = { isFilterSectionVisible = !isFilterSectionVisible },
-                    modifier = Modifier.weight(1f)
+                    text = "Meal Type",
+                    onClick = {
+                        isMealTypeVisible = !isMealTypeVisible
+                        isIngredientsVisible = false // Close the other section
+                    },
+                    modifier = Modifier.fillMaxWidth()
                 )
 
-                Spacer(modifier = Modifier.width(8.dp))
+                if (isMealTypeVisible) {
+                    Column {
+                        mealTypes.forEach { mealType ->
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Checkbox(
+                                    checked = selectedMealTypes.contains(mealType),
+                                    onCheckedChange = {
+                                        if (it) selectedMealTypes.add(mealType)
+                                        else selectedMealTypes.remove(mealType)
+                                        updateFilteredRecipes()
+                                    }
+                                )
+                                Text(mealType, style = MaterialTheme.typography.bodyMedium)
+                            }
+                        }
+                    }
+                }
 
-                // Sort Button
-                Box(
-                    modifier = Modifier.weight(1f)
-                ) {
-                    StyledButton(
-                        text = "Sort",
-                        onClick = { isSortDropdownExpanded = true }
-                    )
-                    DropdownMenu(
-                        expanded = isSortDropdownExpanded,
-                        onDismissRequest = { isSortDropdownExpanded = false }
-                    ) {
-                        sortOptions.forEach { option ->
-                            DropdownMenuItem(
-                                text = { Text(option) },
-                                onClick = {
-                                    selectedSortOption = option
-                                    isSortDropdownExpanded = false
-                                    updateFilteredRecipes()
-                                }
-                            )
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Ingredients Button
+                StyledButton(
+                    text = "Ingredients",
+                    onClick = {
+                        isIngredientsVisible = !isIngredientsVisible
+                        isMealTypeVisible = false // Close the other section
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                if (isIngredientsVisible) {
+                    Column {
+                        ingredientFilters.forEach { option ->
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                RadioButton(
+                                    selected = selectedIngredientFilter == option,
+                                    onClick = {
+                                        selectedIngredientFilter = option
+                                        updateFilteredRecipes()
+                                    }
+                                )
+                                Text(option, style = MaterialTheme.typography.bodyMedium)
+                            }
                         }
                     }
                 }
             }
+        }
 
-            // Filter Section
-            if (isFilterSectionVisible) {
-                Column(
+        //TODO: Make the list scrollable
+
+        // Recipe List
+        LazyColumn(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            itemsIndexed(filteredRecipes.take(5)) { index, recipe ->
+                Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 8.dp)
                         .background(MaterialTheme.colorScheme.surface)
                         .padding(16.dp)
+                        .clickable {
+                            navController.navigate("recipePage/$index")
+                        },
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    // Meal Type Button
-                    StyledButton(
-                        text = "Meal Type",
-                        onClick = {
-                            isMealTypeVisible = !isMealTypeVisible
-                            isIngredientsVisible = false // Close the other section
-                        },
-                        modifier = Modifier.fillMaxWidth()
-                    )
-
-                    if (isMealTypeVisible) {
-                        Column {
-                            mealTypes.forEach { mealType ->
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Checkbox(
-                                        checked = selectedMealTypes.contains(mealType),
-                                        onCheckedChange = {
-                                            if (it) selectedMealTypes.add(mealType)
-                                            else selectedMealTypes.remove(mealType)
-                                            updateFilteredRecipes()
-                                        }
-                                    )
-                                    Text(mealType, style = MaterialTheme.typography.bodyMedium)
-                                }
-                            }
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    // Ingredients Button
-                    StyledButton(
-                        text = "Ingredients",
-                        onClick = {
-                            isIngredientsVisible = !isIngredientsVisible
-                            isMealTypeVisible = false // Close the other section
-                        },
-                        modifier = Modifier.fillMaxWidth()
-                    )
-
-                    if (isIngredientsVisible) {
-                        Column {
-                            ingredientFilters.forEach { option ->
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    RadioButton(
-                                        selected = selectedIngredientFilter == option,
-                                        onClick = {
-                                            selectedIngredientFilter = option
-                                            updateFilteredRecipes()
-                                        }
-                                    )
-                                    Text(option, style = MaterialTheme.typography.bodyMedium)
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            //TODO: Make the list scrollable
-
-            // Recipe List
-            LazyColumn(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                itemsIndexed(filteredRecipes.take(5)) { index, recipe ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(MaterialTheme.colorScheme.surface)
-                            .padding(16.dp)
-                            .clickable {
-                                navController.navigate("recipePage/$index")
-                            },
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
+                    Column(
+                        modifier = Modifier.weight(1f)
                     ) {
-                        Column(
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Text(recipe.Name, style = MaterialTheme.typography.bodyLarge)
-                            Text("Meal: ${recipe.Label.joinToString(", ")}", style = MaterialTheme.typography.bodyMedium)
-                            Text("Preparation Time: ${recipe.TotalTime} mins", style = MaterialTheme.typography.bodySmall)
-                            Text("Ingredients: ${recipe.Ingredients.joinToString(", ")}", style = MaterialTheme.typography.bodySmall)
-                        }
-
-                        IconButton(onClick = {
-                            savedRecipes = savedRecipes.filter { it != recipe }
-                            updateFilteredRecipes()
-                            isModified = true
-                        }) {
-                            Icon(
-                                imageVector = Icons.Filled.Delete,
-                                contentDescription ="Delete Recipe",
-                                tint = MaterialTheme.colorScheme.error
-                            )
-                        }
+                        Text(recipe.Name, style = MaterialTheme.typography.bodyLarge)
+                        Text("Meal: ${recipe.Label.joinToString(", ")}", style = MaterialTheme.typography.bodyMedium)
+                        Text("Preparation Time: ${recipe.TotalTime} mins", style = MaterialTheme.typography.bodySmall)
+                        Text("Ingredients: ${recipe.Ingredients.joinToString(", ")}", style = MaterialTheme.typography.bodySmall)
                     }
+
+                    DeleteButton(onClick = {
+                        savedRecipes = savedRecipes.filter { it != recipe }
+                        updateFilteredRecipes()
+                        isModified = true
+                    },
+                        contentDescription ="Delete Recipe"
+                    )
                 }
             }
         }
+    }
 
-        // Save Button
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.BottomEnd
-        ) {
-            Button(
-                onClick = {
-                    println("Saved Changes")
-                    isModified = false
-                },
-                enabled = isModified,
-                modifier = Modifier.padding(16.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = if (isModified) MaterialTheme.colorScheme.primary else Color.Gray
-                )
-            ) {
-                Text("Save")
-            }
-        }
+    // Save Button
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.BottomEnd
+    ) {
+
+        SaveButton(
+            onClick = {
+                println("Saved Changes")
+                isModified = false
+            },
+            isEnabled = isModified
+        )
     }
 }
