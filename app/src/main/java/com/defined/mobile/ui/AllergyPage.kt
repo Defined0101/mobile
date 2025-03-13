@@ -12,8 +12,9 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.defined.mobile.ui.theme.*
-
-// doesnt save allergies. only one allergy is displayed.
+import com.defined.mobile.backend.UserAllergiesViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.defined.mobile.entities.UserAllergies
 
 //TODO: Connect to database
 //TODO: Only one ingredient can be selected. After db connection fix it to multiple
@@ -21,10 +22,18 @@ import com.defined.mobile.ui.theme.*
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AllergyPage(
+    UserAllergiesViewModel: UserAllergiesViewModel = viewModel(),
+    userId: String, // Pass user ID
     navController: NavController, // NavController for navigation
     onNavigateBack: () -> Unit // Callback for back navigation
 ) {
-    val allergicIngredients = remember { mutableStateListOf<Ingredients>() }
+    val userAllergies by UserAllergiesViewModel.userAllergies.collectAsState()
+
+    // Local copy of allergies (to avoid modifying backend until "Save" is pressed)
+    var localAllergies = remember { mutableStateListOf<String>().apply {
+        addAll(userAllergies?.allergies ?: emptyList())
+    }}
+
     var isModified by remember { mutableStateOf(false) }
 
     var showDiscardDialog by remember { mutableStateOf(false) } // State for discard confirmation dialog
@@ -33,15 +42,29 @@ fun AllergyPage(
     val navBackStackEntry = navController.currentBackStackEntryAsState().value
     val selectedIngredient = navBackStackEntry?.savedStateHandle?.get<String>("selectedIngredient")
 
-    // Add the selected ingredient to the list if it doesn't already exist
+    LaunchedEffect(userId) {
+        UserAllergiesViewModel.fetchUserAllergies(userId)
+    }
+
+    // Update localAllergies when userAllergies changes
+    LaunchedEffect(userAllergies) {
+        userAllergies?.let { allergies ->
+            localAllergies.clear()
+            localAllergies.addAll(allergies.allergies)
+        }
+    }
+
+    // Add a new allergy when an ingredient is selected
     LaunchedEffect(selectedIngredient) {
         selectedIngredient?.let { ingredientName ->
-            if (allergicIngredients.none { it.name == ingredientName }) {
-                allergicIngredients.add(Ingredients(ingredientName))
+            if (!localAllergies.contains(ingredientName)) {
+                localAllergies.add(ingredientName)
                 isModified = true
             }
         }
     }
+
+    println("localAllergies: $localAllergies")
 
     Column(
         modifier = Modifier
@@ -89,12 +112,12 @@ fun AllergyPage(
             )
         }
 
-        // List of Allergic Ingredients
+
         Column(
             modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            allergicIngredients.forEachIndexed { index, item ->
+            localAllergies.forEach { item ->
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -106,7 +129,7 @@ fun AllergyPage(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = item.name,
+                        text = item,
                         modifier = Modifier.weight(1f),
                         style = MaterialTheme.typography.bodyLarge.copy(
                             color = MaterialTheme.colorScheme.onPrimary
@@ -114,7 +137,7 @@ fun AllergyPage(
                     )
                     DeleteButton(
                         onClick = {
-                            allergicIngredients.removeAt(index)
+                            localAllergies.remove(item)
                             isModified = true
                         },
                         contentDescription = "Delete Allergy"
@@ -123,6 +146,7 @@ fun AllergyPage(
             }
         }
 
+
         // Save Button
         Box(
             modifier = Modifier.fillMaxSize(),
@@ -130,7 +154,9 @@ fun AllergyPage(
         ) {
             SaveButton(
                 onClick = {
-                    println("Saved Allergies: ${allergicIngredients.map { it.name }}")
+                    UserAllergiesViewModel.updateUserAllergies(
+                        UserAllergies(userId, localAllergies.toList())
+                    )
                     isModified = false
                 },
                 isEnabled = isModified

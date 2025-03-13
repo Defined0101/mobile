@@ -20,6 +20,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.ui.res.painterResource
 import com.defined.mobile.R
 import androidx.compose.ui.layout.ContentScale
+import com.defined.mobile.backend.PreferencesViewModel
 
 @Composable
 fun ScreenWithBottomNav() {
@@ -145,17 +146,31 @@ fun AppNavigation(navController: NavHostController) {
                 onSave = { /* TODO: Implement save logic */ }
             )
         }
-        composable("preferences") {
-            Preferences(
-                viewModel = preferencesViewModel,
-                onNavigateBack = { navController.popBackStack() }
-            )
+        composable("preferences") { backStackEntry ->
+            currentUser?.let { user ->
+                // Pass userId from currentUser to Preferences
+                Preferences(userId = user.uid, onNavigateBack = { navController.popBackStack() })
+            } ?: run {
+                // Handle case when currentUser is null, maybe redirect to login
+                navController.navigate("login") {
+                    popUpTo("login") { inclusive = true } // Clear the back stack if user isn't logged in
+                }
+            }
         }
         composable("allergies") {
-            AllergyPage(
-                navController = navController,
-                onNavigateBack = { navController.popBackStack() }
-            )
+
+            currentUser?.let { user ->
+                println("user.uid: " + user.uid)
+                AllergyPage(
+                    navController = navController,
+                    userId = user.uid, // Pass the userId
+                    onNavigateBack = { navController.popBackStack() }
+                )
+            } ?: run {
+                navController.navigate("login") {
+                    popUpTo("login") { inclusive = true }
+                }
+            }
         }
         composable("ingredientSearch") {
             IngredientSearch(
