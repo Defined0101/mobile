@@ -9,47 +9,61 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.defined.mobile.ui.theme.*
+import com.defined.mobile.backend.UserPreferencesViewModel
+import com.defined.mobile.entities.UserPreferences
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Preferences(viewModel: PreferencesViewModel, onNavigateBack: () -> Unit) {
-    // Original states from the ViewModel (initial values)
-    val originalDairyFree by viewModel.isDairyFree
-    val originalGlutenFree by viewModel.isGlutenFree
-    val originalPescetarian by viewModel.isPescetarian
-    val originalVegan by viewModel.isVegan
-    val originalVegetarian by viewModel.isVegetarian
+fun Preferences(
+    UserPreferencesViewModel: UserPreferencesViewModel = viewModel(),
+    userId: String,
+    onNavigateBack: () -> Unit
+) {
+    val userPreferences by UserPreferencesViewModel.userPreferences.collectAsState()
 
-    // States for user interaction (local changes)
-    var isDairyFree by remember { mutableStateOf(originalDairyFree) }
-    var isGlutenFree by remember { mutableStateOf(originalGlutenFree) }
-    var isPescetarian by remember { mutableStateOf(originalPescetarian) }
-    var isVegan by remember { mutableStateOf(originalVegan) }
-    var isVegetarian by remember { mutableStateOf(originalVegetarian) }
-
+    var selectedPreferences by remember { mutableStateOf<Set<String>>(emptySet()) }
     // Flag to detect if there are any changes
-    var hasChanges by remember {
-        mutableStateOf(false)
-    }
-
-    // Calculate changes dynamically based on user interaction
-    val detectChanges: () -> Unit = {
-        hasChanges = isDairyFree != originalDairyFree ||
-                isGlutenFree != originalGlutenFree ||
-                isPescetarian != originalPescetarian ||
-                isVegan != originalVegan ||
-                isVegetarian != originalVegetarian
-    }
-
-    // Trigger detectChanges when any of the checkboxes change
-    LaunchedEffect(isDairyFree, isGlutenFree, isPescetarian, isVegan, isVegetarian) {
-        detectChanges()
-    }
-
+    var hasChanges by remember { mutableStateOf(false) }
     var showDiscardDialog by remember { mutableStateOf(false) } // State for discard confirmation dialog
+
+    val preferenceLabels = listOf("Dairy Free", "Gluten Free", "Pescetarian", "Vegan", "Vegetarian")
+
+
+    // Detect changes dynamically
+    LaunchedEffect(userId) {
+        UserPreferencesViewModel.fetchUserPreferences(userId)
+    }
+
+    // Set selectedPreferences whenever userPreferences are updated
+    LaunchedEffect(userPreferences) {
+        userPreferences?.preferences?.let { preferences ->
+            selectedPreferences = mutableSetOf<String>().apply {
+                if (preferences.dairyFree) add("Dairy Free")
+                if (preferences.glutenFree) add("Gluten Free")
+                if (preferences.pescetarian) add("Pescetarian")
+                if (preferences.vegan) add("Vegan")
+                if (preferences.vegetarian) add("Vegetarian")
+            }
+        }
+        hasChanges = false // Reset `hasChanges` after data is fetched
+    }
+
+
+    // Detect changes when the selection changes
+    val detectChanges: () -> Unit = {
+        hasChanges = selectedPreferences != userPreferences?.preferences?.let { preferences ->
+            mutableSetOf<String>().apply {
+                if (preferences.dairyFree) add("Dairy Free")
+                if (preferences.glutenFree) add("Gluten Free")
+                if (preferences.pescetarian) add("Pescetarian")
+                if (preferences.vegan) add("Vegan")
+                if (preferences.vegetarian) add("Vegetarian")
+            }
+        }
+    }
 
     Scaffold(
         containerColor = TransparentColor,
@@ -75,13 +89,19 @@ fun Preferences(viewModel: PreferencesViewModel, onNavigateBack: () -> Unit) {
         floatingActionButton = {
             SaveButton(
                 onClick = {
-                    viewModel.savePreferences(
-                        dairyFree = isDairyFree,
-                        glutenFree = isGlutenFree,
-                        pescetarian = isPescetarian,
-                        vegan = isVegan,
-                        vegetarian = isVegetarian
+                    // Create a UserPreferences object to save
+                    val updatedPreferences = UserPreferences(
+                        userId = userId,
+                        preferences = com.defined.mobile.entities.Preferences(
+                            dairyFree = "Dairy Free" in selectedPreferences,
+                            glutenFree = "Gluten Free" in selectedPreferences,
+                            pescetarian = "Pescetarian" in selectedPreferences,
+                            vegan = "Vegan" in selectedPreferences,
+                            vegetarian = "Vegetarian" in selectedPreferences
+                        )
                     )
+                    // Save the updated preferences
+                    UserPreferencesViewModel.updateUserPreferences(updatedPreferences)
                     hasChanges = false
                 },
                 isEnabled = hasChanges
@@ -103,11 +123,18 @@ fun Preferences(viewModel: PreferencesViewModel, onNavigateBack: () -> Unit) {
                 modifier = Modifier.padding(bottom = 16.dp)
             )
 
-            DietPreferenceCheckbox("Dairy Free", isDairyFree) { isDairyFree = it }
-            DietPreferenceCheckbox("Gluten Free", isGlutenFree) { isGlutenFree = it }
-            DietPreferenceCheckbox("Pescetarian", isPescetarian) { isPescetarian = it }
-            DietPreferenceCheckbox("Vegan", isVegan) { isVegan = it }
-            DietPreferenceCheckbox("Vegetarian", isVegetarian) { isVegetarian = it }
+            val preferenceLabels = listOf("Dairy Free", "Gluten Free", "Pescetarian", "Vegan", "Vegetarian")
+
+            preferenceLabels.forEach { label ->
+                DietPreferenceCheckbox(
+                    label = label,
+                    isChecked = label in selectedPreferences,
+                    onCheckedChange = {
+                        selectedPreferences = if (it) selectedPreferences + label else selectedPreferences - label
+                        detectChanges()
+                    }
+                )
+            }
         }
     }
 
@@ -116,15 +143,18 @@ fun Preferences(viewModel: PreferencesViewModel, onNavigateBack: () -> Unit) {
         UnsavedChangesDialog(
             onDismiss = { showDiscardDialog = false },
             onConfirmLeave = {
+                // Restore the original preferences from the fetched data
+                userPreferences?.preferences?.let { preferences ->
+                    selectedPreferences = mutableSetOf<String>().apply {
+                        if (preferences.dairyFree) add("Dairy Free")
+                        if (preferences.glutenFree) add("Gluten Free")
+                        if (preferences.pescetarian) add("Pescetarian")
+                        if (preferences.vegan) add("Vegan")
+                        if (preferences.vegetarian) add("Vegetarian")
+                    }
+                }
+                hasChanges = false
                 showDiscardDialog = false
-
-                // Reset temporary states to the original values from the ViewModel
-                isDairyFree = originalDairyFree
-                isGlutenFree = originalGlutenFree
-                isPescetarian = originalPescetarian
-                isVegan = originalVegan
-                isVegetarian = originalVegetarian
-
                 onNavigateBack()
             }
         )

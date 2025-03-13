@@ -39,6 +39,8 @@ import com.composables.icons.lucide.Vegan
 import com.composables.icons.lucide.WheatOff
 import com.composables.icons.lucide.Zap
 import com.defined.mobile.R
+import com.defined.mobile.backend.CategoryViewModel
+import com.defined.mobile.backend.RecipeViewModel
 import java.util.Locale
 import com.defined.mobile.ui.theme.*
 
@@ -297,37 +299,47 @@ fun ExpandableRecipeName(recipeName: String) {
 }
 
 @Composable
-fun RecipePage(recipeId: String, onBackClick: () -> Unit) {
-    val index = recipeId.toIntOrNull() ?: 0
-    val recipe = dummyRecipes.getOrNull(index)
+fun RecipePage(recipeId: String, onBackClick: () -> Unit, viewModel: RecipeViewModel = androidx.lifecycle.viewmodel.compose.viewModel()) {
+    val recipeDetails by viewModel.recipeDetails.collectAsState()
 
-    var ingredientsExpanded by remember { mutableStateOf(false) }
-    var instructionsExpanded by remember { mutableStateOf(false) }
+    // Fetch recipe details when the composable is first launched
+    LaunchedEffect(recipeId) {
+        val id = recipeId.toIntOrNull() ?: 0
+        viewModel.fetchRecipeDetails(id)
+    }
 
-    // Translucent overlay
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
-    )
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-            .animateContentSize(),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        // Top Bar: The line with t
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
+    if (recipeDetails != null) {
+        //val index = recipeId.toIntOrNull() ?: 0
+        //val recipe = dummyRecipes.getOrNull(index)
+        val recipe = recipeDetails!!
+
+        var ingredientsExpanded by remember { mutableStateOf(false) }
+        var instructionsExpanded by remember { mutableStateOf(false) }
+
+        // Translucent overlay
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
+        )
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp)
+                .animateContentSize(),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            BackButton(onBackClick)
-        }
-        Spacer(modifier = Modifier.height(8.dp))
-        if (recipe != null) {
+            // Top Bar: The line with t
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                BackButton(onBackClick)
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+
             // Recipe name: Displayed using ExpandableRecipeName.
-            ExpandableRecipeName(recipeName = recipe.name)
+            ExpandableRecipeName(recipeName = recipe.Name)
             Spacer(modifier = Modifier.height(8.dp))
             // Recipe photo and section showing dietary preferences.
             Box(
@@ -350,12 +362,15 @@ fun RecipePage(recipeId: String, onBackClick: () -> Unit) {
                     )
                 }
                 // Dietary preferences are shown if the filtered list is not empty.
-                val filteredPreferences = filterDietPreferences(recipe.dietPreferences)
+                val filteredPreferences = filterDietPreferences(recipe.Label) // recipe.dietPreferences
                 if (filteredPreferences.isNotEmpty()) {
                     Row(
                         modifier = Modifier
                             .align(Alignment.BottomEnd)
-                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f), shape = MaterialTheme.shapes.medium)
+                            .background(
+                                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                                shape = MaterialTheme.shapes.medium
+                            )
                             .padding(8.dp)
                             .horizontalScroll(rememberScrollState()),
                         verticalAlignment = Alignment.CenterVertically
@@ -373,17 +388,17 @@ fun RecipePage(recipeId: String, onBackClick: () -> Unit) {
             ) {
                 InfoBadge(
                     icon = Lucide.Tag,
-                    label = recipe.category,
+                    label = recipe.Category,
                     modifier = Modifier.weight(1f)
                 )
                 InfoBadge(
                     icon = Lucide.AlarmClock,
-                    label = recipe.totalTime,
+                    label = recipe.TotalTime.toString(),
                     modifier = Modifier.weight(1f)
                 )
                 InfoBadge(
                     icon = Lucide.Zap,
-                    label = recipe.totalCalories,
+                    label = recipe.Calories.toString(),
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -397,7 +412,7 @@ fun RecipePage(recipeId: String, onBackClick: () -> Unit) {
                 leadingIcon = Icons.Filled.ShoppingCart,
                 content = {
                     Column {
-                        recipe.ingredients.forEach { ingredient ->
+                        recipe.Ingredients.forEach { ingredient ->
                             Text(
                                 text = "• $ingredient",
                                 style = MaterialTheme.typography.bodyLarge,
@@ -418,18 +433,11 @@ fun RecipePage(recipeId: String, onBackClick: () -> Unit) {
                 leadingIcon = Lucide.ReceiptText,
                 content = {
                     Text(
-                        text = recipe.instructions,
+                        text = recipe.Instructions,
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onSecondaryContainer
                     )
                 }
-            )
-        } else {
-            Text(
-                text = "Recipe not found",
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onPrimary,
-                modifier = Modifier.align(Alignment.CenterHorizontally)
             )
         }
     }

@@ -30,25 +30,26 @@ import com.defined.mobile.ui.theme.StyledButton
 fun SearchScreen(navController: NavController, backActive: Boolean, onBackClick: () -> Unit, viewModel: RecipeViewModel = androidx.lifecycle.viewmodel.compose.viewModel()) {
     // Updated list of recipes with preparation time
     val recipesVal by viewModel.recipes.collectAsState()
-    var recipes = recipesVal
+
     // States for search query, filters, and expanded views
     var searchQuery by remember { mutableStateOf("") }
-    var filteredRecipes by remember { mutableStateOf(recipes) }
+    //var filteredRecipes by remember { mutableStateOf(recipes) }
     var isFilterDialogVisible by remember { mutableStateOf(false) }
-    var isMealTypeVisible by remember { mutableStateOf(false) }
-    var isIngredientsVisible by remember { mutableStateOf(false) }
-    var selectedMealTypes by remember { mutableStateOf(mutableSetOf<String>()) }
-    var selectedIngredientFilter by remember { mutableStateOf("Any ingredient") }
+    //var isMealTypeVisible by remember { mutableStateOf(false) }
+    //var isIngredientsVisible by remember { mutableStateOf(false) }
+    //var selectedMealTypes by remember { mutableStateOf(mutableSetOf<String>()) }
+    //var selectedIngredientFilter by remember { mutableStateOf("Any ingredient") }
     var selectedSortOption by remember { mutableStateOf("None") }
     var isSortDropdownExpanded by remember { mutableStateOf(false) }
 
     // TODO: Extend the sort and filter options
-    val mealTypes = listOf("Breakfast", "Lunch", "Dinner", "Dessert", "Snack")
-    val ingredientFilters = listOf("Only with my ingredients", "Any ingredient")
+    //val mealTypes = listOf("Breakfast", "Lunch", "Dinner", "Dessert", "Snack")
+    //val ingredientFilters = listOf("Only with my ingredients", "Any ingredient")
     val sortOptions = listOf("None", "Preparation Time (Ascending)", "Preparation Time (Descending)")
 
 
     // Function to apply filters
+    /*
     fun applyFilters(recipes: List<Recipe>): List<Recipe> {
         return recipes.filter { recipe ->
             val matchesSearchQuery = searchQuery.isBlank() || recipe.Name.contains(searchQuery, ignoreCase = true)
@@ -74,6 +75,17 @@ fun SearchScreen(navController: NavController, backActive: Boolean, onBackClick:
         val filtered = applyFilters(recipes)
         filteredRecipes = applySort(filtered)
     }
+     */
+
+    // Handle search and sorting
+    fun handleSearchAndSort() {
+        val queryJson = """{"search": "$searchQuery"}""" // Build dynamic search query as JSON
+        val sortByField = "TotalTime" // Can be dynamic based on selectedSortOption
+        val sortByDirection = if (selectedSortOption.contains("Ascending")) "asc" else "desc"
+
+        // Fetch the filtered and sorted data
+        viewModel.searchRecipes(queryJson, sortByField, sortByDirection)
+    }
 
     Column(
         modifier = Modifier
@@ -96,7 +108,7 @@ fun SearchScreen(navController: NavController, backActive: Boolean, onBackClick:
             value = searchQuery,
             onValueChange = {
                 searchQuery = it
-                updateFilteredRecipes()
+                handleSearchAndSort()
             },
             placeholder = { Text("Search...") },
             modifier = Modifier
@@ -138,8 +150,8 @@ fun SearchScreen(navController: NavController, backActive: Boolean, onBackClick:
                             text = { Text(option) },
                             onClick = {
                                 selectedSortOption = option
+                                handleSearchAndSort()
                                 isSortDropdownExpanded = false
-                                updateFilteredRecipes()
                             }
                         )
                     }
@@ -147,103 +159,12 @@ fun SearchScreen(navController: NavController, backActive: Boolean, onBackClick:
             }
         }
 
-        // **Modal Filter Dialog**
-        if (isFilterDialogVisible) {
-            AlertDialog(
-                onDismissRequest = { isFilterDialogVisible = false },
-                confirmButton = {
-                    StyledButton(
-                        text = "Apply Filters",
-                        onClick = {
-                            updateFilteredRecipes()
-                            isFilterDialogVisible = false
-                        }
-                    )
-                },
-                dismissButton = {
-                    StyledButton(
-                        text = "Cancel",
-                        onClick = { isFilterDialogVisible = false }
-                    )
-                },
-                title = { Text("Filter Recipes") },
-                text = {
-                    Column {
-                        StyledButton(
-                            text = "Meal Type",
-                            onClick = {
-                                isMealTypeVisible = !isMealTypeVisible
-                                isIngredientsVisible = false
-                            },
-                            modifier = Modifier.fillMaxWidth()
-                        )
-
-                        // **Meal Type Bölümü**
-                        AnimatedVisibility(
-                            visible = isMealTypeVisible,
-                            enter = fadeIn(animationSpec = tween(300)) + expandVertically(animationSpec = tween(300)),
-                            exit = fadeOut(animationSpec = tween(300)) + shrinkVertically(animationSpec = tween(300))
-                        ) {
-                            Column {
-                                mealTypes.forEach { mealType ->
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Checkbox(
-                                            checked = selectedMealTypes.contains(mealType),
-                                            onCheckedChange = {
-                                                if (it) selectedMealTypes.add(mealType)
-                                                else selectedMealTypes.remove(mealType)
-                                                updateFilteredRecipes()
-                                            }
-                                        )
-                                        Text(mealType, style = MaterialTheme.typography.bodyMedium)
-                                    }
-                                }
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        StyledButton(
-                            text = "Ingredients",
-                            onClick = {
-                                isIngredientsVisible = !isIngredientsVisible
-                                isMealTypeVisible = false
-                            },
-                            modifier = Modifier.fillMaxWidth()
-                        )
-
-                        // **Ingredients Bölümü**
-                        AnimatedVisibility(
-                            visible = isIngredientsVisible,
-                            enter = fadeIn(animationSpec = tween(300)) + expandVertically(animationSpec = tween(300)),
-                            exit = fadeOut(animationSpec = tween(300)) + shrinkVertically(animationSpec = tween(300))
-                        ) {
-                            Column {
-                                ingredientFilters.forEach { option ->
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        RadioButton(
-                                            selected = selectedIngredientFilter == option,
-                                            onClick = {
-                                                selectedIngredientFilter = option
-                                                updateFilteredRecipes()
-                                            }
-                                        )
-                                        Text(option, style = MaterialTheme.typography.bodyMedium)
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            )
-        }
-
         // Recipe List
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            itemsIndexed(filteredRecipes) { index, recipe ->
+            itemsIndexed(recipesVal) { index, recipe ->
                 RecipeItem(
                     recipe = recipe,
                     onClick = {

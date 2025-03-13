@@ -15,7 +15,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -150,6 +149,8 @@ fun CategorySection(viewModel: CategoryViewModel = androidx.lifecycle.viewmodel.
 @Composable
 fun RecipeSection(navController: NavController, viewModel: RecipeViewModel = androidx.lifecycle.viewmodel.compose.viewModel()) {
     val recipes by viewModel.recipes.collectAsState()
+    val recipeCard by viewModel.recipeCard.collectAsState()
+    var selectedRecipeId by remember { mutableStateOf<Int?>(null) } // Track selected recipe
 
     // Title for recipe section
     Text(
@@ -168,7 +169,7 @@ fun RecipeSection(navController: NavController, viewModel: RecipeViewModel = and
     ) {
         items(recipes) { recipe ->
             RecipeItem(
-                recipe,
+                recipe= recipe,
                 onClick = {
                     navController.navigate("recipePage/${recipe.ID}")
                 }
