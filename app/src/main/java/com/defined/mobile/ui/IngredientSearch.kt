@@ -4,14 +4,13 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.defined.mobile.entities.Ingredient
 import com.defined.mobile.ui.theme.BackButton
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -22,12 +21,12 @@ fun IngredientSearch(
 ) {
     var searchQuery by remember { mutableStateOf("") }
     val allIngredients = listOf(
-        Ingredients("Peanuts"),
-        Ingredients("Shellfish"),
-        Ingredients("Soy"),
-        Ingredients("Eggs"),
-        Ingredients("Wheat"),
-        Ingredients("Milk")
+        Ingredient("Peanuts", "gram","gram", 50f),
+        Ingredient("Shellfish","pint","pint", 50f),
+        Ingredient("Soy","gram","gram", 50f),
+        Ingredient("Eggs","gram","gram", 50f),
+        Ingredient("Wheat","gram","gram", 50f),
+        Ingredient("Milk","liter","gram", 50f)
     )
 
     val filteredIngredients = allIngredients.filter {
@@ -76,7 +75,7 @@ fun IngredientSearch(
                         .clickable {
                             navController.previousBackStackEntry?.savedStateHandle?.set(
                                 "selectedIngredient",
-                                ingredient.name
+                                Pair(ingredient.name, ingredient.default_unit) // ingredient.name
                             )
                             navController.popBackStack()
                         }

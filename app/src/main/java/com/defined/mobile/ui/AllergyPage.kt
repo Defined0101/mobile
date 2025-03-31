@@ -40,7 +40,8 @@ fun AllergyPage(
 
     // Observe navigation result
     val navBackStackEntry = navController.currentBackStackEntryAsState().value
-    val selectedIngredient = navBackStackEntry?.savedStateHandle?.get<String>("selectedIngredient")
+    //val selectedIngredient = navBackStackEntry?.savedStateHandle?.get<String>("selectedIngredient")
+    val selectedIngredientPair = navBackStackEntry?.savedStateHandle?.get<Pair<String, String>>("selectedIngredient")
 
     LaunchedEffect(userId) {
         UserAllergiesViewModel.fetchUserAllergies(userId)
@@ -55,10 +56,10 @@ fun AllergyPage(
     }
 
     // Add a new allergy when an ingredient is selected
-    LaunchedEffect(selectedIngredient) {
-        selectedIngredient?.let { ingredientName ->
-            if (!localAllergies.contains(ingredientName)) {
-                localAllergies.add(ingredientName)
+    LaunchedEffect(selectedIngredientPair) {
+        selectedIngredientPair?.let { (name, _) ->
+            if (!localAllergies.contains(name)) {
+                localAllergies.add(name)
                 isModified = true
             }
         }
@@ -163,7 +164,6 @@ fun AllergyPage(
             )
         }
     }
-
     // Show discard dialog if there are unsaved changes
     if (showDiscardDialog) {
         UnsavedChangesDialog(

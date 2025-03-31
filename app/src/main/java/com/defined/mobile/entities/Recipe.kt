@@ -2,11 +2,6 @@ package com.defined.mobile.entities
 
 import com.google.gson.annotations.SerializedName
 
-data class Ingredient(
-    @SerializedName("name") val name: String,
-    @SerializedName("quantity") val quantity: Float?,
-    @SerializedName("unit") val unit: String?
-)
 
 data class Recipe (
     val ID: Int,

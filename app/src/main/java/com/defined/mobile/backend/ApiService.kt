@@ -3,6 +3,7 @@ package com.defined.mobile.backend
 import com.defined.mobile.entities.Recipe
 import com.defined.mobile.entities.UserPreferences
 import com.defined.mobile.entities.UserAllergies
+import com.defined.mobile.entities.UserIngredients
 import retrofit2.http.GET
 import retrofit2.http.Query
 import retrofit2.http.Body
@@ -22,7 +23,7 @@ interface ApiService {
     suspend fun getRecipeCard(
         @Query("recipe_id") recipeId: Int,
         @Query("fields") fields: List<String>
-    ): Map<String, Any>
+    ): Map<String, List<String>>
 
     @GET("getPreferences") // was getLabels. to avoid confusion changed to Preferences = Labels.
     suspend fun getPreferences(): List<String>
@@ -48,4 +49,13 @@ interface ApiService {
 
     @POST("setUserAllergies")
     suspend fun setUserAllergies(@Body allergies: UserAllergies)
+
+    @GET("getIngredients")
+    suspend fun getIngredients(): List<String>
+
+    @GET("getUserIngredients")
+    suspend fun getUserIngredients(@Query("user_id") userId: String): UserIngredients
+
+    @POST("setUserAllergies")
+    suspend fun setUserIngredients(@Body ingredients: UserIngredients)
 }
