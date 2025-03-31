@@ -24,6 +24,8 @@ import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.ThumbUp
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Icon
@@ -63,8 +65,8 @@ fun ProfileScreen(navController: NavHostController, viewModel: LoginViewModel) {
         )
         CustomButtonWithIconAndTriangle(
             text = "Ingredients",
-            icon = Icons.Default.Settings,
-            onClick = { /*navController.navigate("ingredients")*/ }
+            icon = Icons.Default.ShoppingCart,
+            onClick = { navController.navigate("ingredients") }
         )
         CustomButtonWithIconAndTriangle(
             text = "Allergies",
@@ -73,7 +75,7 @@ fun ProfileScreen(navController: NavHostController, viewModel: LoginViewModel) {
         )
         CustomButtonWithIconAndTriangle(
             text = "Saved Recipes",
-            icon = Icons.Default.ThumbUp, // TODO:bookmark doesnt exist
+            icon = Icons.Default.Star, // was ThumbUp
             onClick = { navController.navigate("savedRecipes") }
         )
         CustomButtonWithIconAndTriangle(

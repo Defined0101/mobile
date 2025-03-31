@@ -39,7 +39,8 @@ fun ScreenWithBottomNav() {
         "profileInformation" to 3,
         "favourites" to 3,
         "allergies" to 3,
-        "preferences" to 3
+        "preferences" to 3,
+        "ingredients" to 3
     )
 
     var selectedItemIndex by rememberSaveable { mutableStateOf(0) }
@@ -198,6 +199,21 @@ fun AppNavigation(navController: NavHostController) {
                 recipeId,
                 onBackClick = { navController.popBackStack() }
             )
+        }
+        composable("ingredients") {
+
+            currentUser?.let { user ->
+                println("user.uid: " + user.uid)
+                InventoryPage(
+                    navController = navController,
+                    userId = user.uid, // Pass the userId
+                    onNavigateBack = { navController.popBackStack() }
+                )
+            } ?: run {
+                navController.navigate("login") {
+                    popUpTo("login") { inclusive = true }
+                }
+            }
         }
     }
 }
