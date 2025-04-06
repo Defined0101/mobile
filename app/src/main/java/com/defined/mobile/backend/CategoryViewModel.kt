@@ -7,6 +7,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 class CategoryViewModel : ViewModel() {
+    private val repository = CategoryRepository(RetrofitClient.apiService)
+
     private val _categories = MutableStateFlow<List<String>>(emptyList())
     val categories: StateFlow<List<String>> = _categories
 
@@ -14,17 +16,18 @@ class CategoryViewModel : ViewModel() {
         fetchCategories()
     }
 
-    private fun fetchCategories() {
+    private fun fetchCategories(forceRefresh: Boolean = false) {
         viewModelScope.launch {
             try {
-                //val response = RetrofitClient.apiService.getCategories()
-                //_categories.value = response
-
-                // Simulating a dummy response
-                _categories.value = listOf("Fruits", "Vegetables", "Dairy", "Grains", "Meats")
+                val data = repository.getCategories(forceRefresh)
+                _categories.value = data
             } catch (e: Exception) {
                 e.printStackTrace()
             }
         }
+    }
+
+    fun clearCategoryCache() {
+        repository.clearCache()
     }
 }
