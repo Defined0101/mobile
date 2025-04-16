@@ -14,6 +14,7 @@ import androidx.compose.ui.unit.dp
 import com.defined.mobile.R
 import com.defined.mobile.entities.Recipe
 import com.defined.mobile.ui.theme.*
+import java.util.Locale
 
 @Composable
 fun RecipeItem(
@@ -67,7 +68,7 @@ fun RecipeItem(
 
                 // Recipe Category
                 Text(
-                    text = "${recipe.TotalTime} minutes",
+                    text = "${recipe.TotalTime.toInt()} minutes",
                     style = MaterialTheme.typography.bodySmall.copy(
                         fontSize = fontSmall, // Smaller font size for description
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f) // Slightly transparent color for subdued look
@@ -78,8 +79,9 @@ fun RecipeItem(
                 Spacer(modifier = Modifier.height(2.dp)) // Spacer to add vertical space between title and description
 
                 // Recipe Description
+                val refactoredPreferences = refactorDietPreferences(filterDietPreferences(recipe.Label))
                 Text(
-                    text = recipe.Label.joinToString(", "),
+                    text = refactoredPreferences.joinToString(", "),
                     style = MaterialTheme.typography.bodySmall.copy(
                         fontSize = fontSmall, // Smaller font size for description
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f) // Slightly transparent color for subdued look

@@ -54,6 +54,7 @@ dependencies {
     implementation(libs.androidx.ui.graphics) // Graphics and color support for UI components
     implementation(libs.androidx.ui.tooling.preview) // Preview support for UI components in Compose
     implementation(libs.androidx.material3) // Material Design 3 components and themes
+    implementation(libs.androidx.material.icons.extended)
 
     // Navigation Dependencies
     implementation(libs.androidx.navigation.compose) // Navigation library for Compose
@@ -64,7 +65,9 @@ dependencies {
     // Support and Compatibility Dependency
     implementation(libs.androidx.appcompat)
     implementation(libs.firebase.firestore.ktx)
-    implementation(libs.firebase.auth.ktx) // Compatibility library for legacy APIs and devices
+    implementation(libs.firebase.auth.ktx)
+    implementation(libs.androidx.room.common)
+    implementation(libs.androidx.room.ktx) // Compatibility library for legacy APIs and devices
 
     // Testing Dependencies
     testImplementation(libs.junit) // JUnit testing framework for unit tests

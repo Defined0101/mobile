@@ -25,6 +25,10 @@ import com.defined.mobile.backend.LikedRecipeViewModel
 import com.defined.mobile.backend.PreferencesViewModel
 import com.defined.mobile.backend.SavedRecipeViewModel
 import com.defined.mobile.backend.UserIngredientsViewModel
+import com.defined.mobile.backend.CategoryViewModel
+import com.defined.mobile.backend.PreferencesViewModel
+import com.defined.mobile.backend.RecipeViewModel
+import com.defined.mobile.backend.ShoppingListViewModel
 
 @Composable
 fun ScreenWithBottomNav() {
@@ -36,7 +40,7 @@ fun ScreenWithBottomNav() {
     // Map routes to bottom nav index
     val routeToIndex = mapOf(
         "main" to 0,
-        "search/{backActive}" to 1,
+        "search/{backActive}/{selectedCategory}" to 1,
         "likedRecipes/{backActive}" to 2,
         "profile" to 3,
         "savedRecipes" to 3,
@@ -60,6 +64,12 @@ fun ScreenWithBottomNav() {
     // Update selected index based on current route
     selectedItemIndex = routeToIndex[currentRoute] ?: 0 // Default to Home if route not mapped
 
+    val recipeViewModel: RecipeViewModel = viewModel()
+    val categoryViewModel: CategoryViewModel = viewModel()
+    val preferencesViewModel: PreferencesViewModel = viewModel()
+    val shoppingListViewModel: ShoppingListViewModel = viewModel()
+    val loginViewModel: LoginViewModel = viewModel()
+
     Scaffold(
         bottomBar = {
             if (showBottomNavBar)
@@ -69,8 +79,8 @@ fun ScreenWithBottomNav() {
                         selectedItemIndex = index
                         when (index) {
                             0 -> navController.navigate("main") { launchSingleTop = true }
-                            1 -> navController.navigate("search/false") { launchSingleTop = true }
-                            2 -> navController.navigate("likedRecipes/true") { launchSingleTop = true } // changed false to true
+                            1 -> navController.navigate("search/false/_") { launchSingleTop = true }
+                            2 -> navController.navigate("likedRecipes/false") { launchSingleTop = true }
                             3 -> navController.navigate("profile") { launchSingleTop = true }
                         }
                     },
@@ -84,7 +94,14 @@ fun ScreenWithBottomNav() {
                         .fillMaxSize()
                         .padding(paddingValues)
                 ) {
-                    AppNavigation(navController)
+                    AppNavigation(
+                        navController = navController,
+                        recipeViewModel = recipeViewModel,
+                        categoryViewModel = categoryViewModel,
+                        preferencesViewModel = preferencesViewModel,
+                        shoppingListViewModel = shoppingListViewModel,
+                        loginViewModel = loginViewModel
+                    )
                 }
             }
         }
@@ -92,19 +109,16 @@ fun ScreenWithBottomNav() {
 }
 
 @Composable
-fun AppNavigation(navController: NavHostController) {
-    // Shared ViewModel for state management
-    val likedRecipeViewModel: LikedRecipeViewModel = viewModel()
-    val dislikedRecipeViewModel: DislikedRecipeViewModel = viewModel()
-    val savedRecipeViewModel: SavedRecipeViewModel = viewModel()
+fun AppNavigation(
+    navController: NavHostController,
+    recipeViewModel: RecipeViewModel,
+    categoryViewModel: CategoryViewModel,
+    preferencesViewModel: PreferencesViewModel,
+    shoppingListViewModel: ShoppingListViewModel,
+    loginViewModel: LoginViewModel
+) {
 
-    val userIngredientsViewModel: UserIngredientsViewModel = viewModel()
-
-    val preferencesViewModel: PreferencesViewModel = viewModel()
-
-    val viewModel: LoginViewModel = viewModel()
-
-    val currentUser = viewModel.currentUser()
+    val currentUser = loginViewModel.currentUser()
 
     if (currentUser != null) {
         println("${currentUser.displayName} already logged in.")
@@ -116,7 +130,7 @@ fun AppNavigation(navController: NavHostController) {
     NavHost(navController, startDestination = startDestination) {
         composable("login") {
             LoginPage(
-                viewModel = viewModel,
+                viewModel = loginViewModel,
                 onSignInClick = { user ->
                     if (user != null) {
                         println(user.uid)
@@ -133,28 +147,38 @@ fun AppNavigation(navController: NavHostController) {
         }
         composable("main") {
             MainPage(
+                recipeViewModel = recipeViewModel,
+                categoryViewModel = categoryViewModel,
+                shoppingListViewModel = shoppingListViewModel,
                 navController = navController,
-                onSearchClick = { navController.navigate("search/true") }
+                onSearchClick = { navController.navigate("search/true/_") }
             )
         }
-        composable("search/{backActive}") { backStackEntry ->
+        composable("search/{backActive}/{selectedCategory}") { backStackEntry ->
             val backActive = backStackEntry.arguments?.getString("backActive")?.toBoolean() ?: false
+            val selectedCategory = backStackEntry.arguments?.getString("selectedCategory").orEmpty()
+                .takeIf { it != "_" } ?: "" // "_" geçildiyse bunu gerçek boşluk gibi ele al
+
             SearchScreen(
                 navController = navController,
                 backActive = backActive,
-                onBackClick = { navController.popBackStack() }
+                onBackClick = { navController.popBackStack() },
+                initialSelectedCategory = selectedCategory,
+                categoryViewModel = categoryViewModel,
+                preferencesViewModel = preferencesViewModel,
+                shoppingListViewModel = shoppingListViewModel
             )
         }
         composable("favorites") {
-            ProfileScreen(navController = navController, viewModel = viewModel)
+            ProfileScreen(navController = navController, viewModel = loginViewModel)
         }
         composable("profile") {
-            ProfileScreen(navController = navController, viewModel = viewModel)
+            ProfileScreen(navController = navController, viewModel = loginViewModel)
         }
         composable("profileInformation") {
             ProfileInformation(
-                onNavigateBack = { navController.popBackStack() },
-                onSave = { /* TODO: Implement save logic */ }
+                viewModel = loginViewModel,
+                onNavigateBack = { navController.popBackStack() }
             )
         }
         composable("preferences") { backStackEntry ->
@@ -189,12 +213,14 @@ fun AppNavigation(navController: NavHostController) {
                 onNavigateBack = { navController.popBackStack() }
             )
         }
-        composable("savedRecipes") {
+        composable("savedRecipes/{backActive}") {
             currentUser?.let { user ->
                 //println("user.uid: " + user.uid)
+                val backActive = backStackEntry.arguments?.getString("backActive")?.toBoolean() ?: false
                 SavedRecipePage(
                     userId = user.uid,
                     navController = navController,
+                    backActive = backActive,
                     onBackClick = { navController.popBackStack() },
                     savedRecipeViewModel = savedRecipeViewModel
                 )
@@ -215,7 +241,8 @@ fun AppNavigation(navController: NavHostController) {
                     onBackClick = { navController.popBackStack() },
                     likedRecipeViewModel = likedRecipeViewModel,
                     savedRecipeViewModel = savedRecipeViewModel,
-                    dislikedRecipeViewModel = dislikedRecipeViewModel
+                    dislikedRecipeViewModel = dislikedRecipeViewModel,
+                    shoppingListViewModel = shoppingListViewModel
                 )
             } ?: run {
                 navController.navigate("login") {
@@ -256,6 +283,21 @@ fun AppNavigation(navController: NavHostController) {
                     popUpTo("login") { inclusive = true }
                 }
             }
+        }
+        composable("dislikedRecipes/{backActive}") { backStackEntry ->
+            val backActive = backStackEntry.arguments?.getString("backActive")?.toBoolean() ?: false
+            DislikedRecipePage(
+                navController = navController,
+                backActive = backActive,
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+        composable("shoppingListPage") {
+            ShoppingListPage(
+                shoppingListViewModel = shoppingListViewModel,
+                navController = navController,
+                onBackClick = { navController.popBackStack() }
+            )
         }
     }
 }

@@ -18,8 +18,14 @@ class RecipeViewModel : ViewModel() {
     private val _likedRecipes = MutableStateFlow<List<Recipe>>(emptyList())
     val likedRecipes: StateFlow<List<Recipe>> = _likedRecipes
 
+    private val _savedRecipes = MutableStateFlow<List<Recipe>>(emptyList())
+    val savedRecipes: StateFlow<List<Recipe>> = _savedRecipes
+
     private val _recipeDetails = MutableStateFlow<Recipe?>(null)
     val recipeDetails: StateFlow<Recipe?> = _recipeDetails
+
+    private val _surpriseRecipe = MutableStateFlow<Int>(0)
+    val surpriseRecipe: StateFlow<Int> = _surpriseRecipe
 
     private val _recipeCard = MutableStateFlow<Map<String, Any>?>(null)
     val recipeCard: StateFlow<Map<String, Any>?> = _recipeCard
@@ -64,6 +70,17 @@ class RecipeViewModel : ViewModel() {
         }
     }
 
+    private fun fetchSavedRecipes(userId: String, forceRefresh: Boolean = false) {
+        viewModelScope.launch {
+            try {
+                val recipesList = repository.getSavedRecipes(userId, forceRefresh)
+                _savedRecipes.value = recipesList
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
     fun fetchRecipeDetails(recipeId: Int) {
         viewModelScope.launch {
             try {
@@ -84,6 +101,17 @@ class RecipeViewModel : ViewModel() {
                     Label = listOf("Vegetarian")
                 )
                 _recipeDetails.value = dummyRecipe
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    fun fetchSurpriseRecipeId(userId: String) {
+        viewModelScope.launch {
+            try {
+                val response = RetrofitClient.apiService.getSurpriseRecipeId(userId)
+                _surpriseRecipe.value = response
             } catch (e: Exception) {
                 e.printStackTrace()
             }

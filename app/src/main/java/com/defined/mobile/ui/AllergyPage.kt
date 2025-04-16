@@ -22,12 +22,12 @@ import com.defined.mobile.entities.UserAllergies
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AllergyPage(
-    UserAllergiesViewModel: UserAllergiesViewModel = viewModel(),
+    userAllergiesViewModel: UserAllergiesViewModel = viewModel(),
     userId: String, // Pass user ID
     navController: NavController, // NavController for navigation
     onNavigateBack: () -> Unit // Callback for back navigation
 ) {
-    val userAllergies by UserAllergiesViewModel.userAllergies.collectAsState()
+    val userAllergies by userAllergiesViewModel.userAllergies.collectAsState()
 
     // Local copy of allergies (to avoid modifying backend until "Save" is pressed)
     var localAllergies = remember { mutableStateListOf<String>().apply {
@@ -44,7 +44,7 @@ fun AllergyPage(
     val selectedIngredientPair = navBackStackEntry?.savedStateHandle?.get<Pair<String, String>>("selectedIngredient")
 
     LaunchedEffect(userId) {
-        UserAllergiesViewModel.fetchUserAllergies(userId)
+        userAllergiesViewModel.fetchUserAllergies(userId)
     }
 
     // Update localAllergies when userAllergies changes
@@ -155,7 +155,7 @@ fun AllergyPage(
         ) {
             SaveButton(
                 onClick = {
-                    UserAllergiesViewModel.updateUserAllergies(
+                    userAllergiesViewModel.updateUserAllergies(
                         UserAllergies(userId, localAllergies.toList())
                     )
                     isModified = false

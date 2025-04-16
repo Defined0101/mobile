@@ -10,24 +10,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.defined.mobile.backend.RecipeViewModel
-import com.defined.mobile.backend.SavedRecipeViewModel
 import com.defined.mobile.entities.Recipe
 import com.defined.mobile.ui.theme.BackButton
 import com.defined.mobile.ui.theme.StyledButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SavedRecipePage(
-    userId: String,
-    navController: NavController, onBackClick: () -> Unit,
-    savedRecipeViewModel: SavedRecipeViewModel,
+fun DislikedRecipePage(
+    navController: NavController,
+    backActive: Boolean,
+    onBackClick: () -> Unit,
+    viewModel: RecipeViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
-    // Updated list of recipes with preparation time
-    //val savedRecipesVal by viewModel.recipes.collectAsState()
-    val savedRecipesVal by savedRecipeViewModel.savedRecipes.collectAsState()
-
-    var savedRecipes = savedRecipesVal
-    var isModified by remember { mutableStateOf(false) }
+    // Tüm tarifler (disliked tariflerin listesi; örneğin backend'den gelen liste içerisinde filtre uygulayabilirsiniz)
+    val recipesVal by viewModel.recipes.collectAsState()
 
     // SearchScreen ile uyumlu filtre ve sıralama state’leri:
     var searchQuery by remember { mutableStateOf("") }
@@ -75,26 +71,6 @@ fun SavedRecipePage(
         }
     }
 
-    // Function to apply sort
-    fun applySort(recipes: List<Recipe>): List<Recipe> {
-        return when (selectedSortOption) {
-            "Preparation Time (Ascending)" -> recipes.sortedBy { it.TotalTime }
-            "Preparation Time (Descending)" -> recipes.sortedByDescending { it.TotalTime }
-            else -> recipes
-        }
-    }
-
-    // Function to update filtered and sorted list
-    fun updateFilteredRecipes() {
-        val filtered = applyFilters(savedRecipes)
-        filteredRecipes = applySort(filtered)
-    }
-
-    // Fetch liked recipes on userId change
-    LaunchedEffect(userId) {
-        savedRecipeViewModel.fetchSavedRecipes(userId)
-    }
-
     Column(
         modifier = Modifier.fillMaxSize().padding(16.dp),
         verticalArrangement = Arrangement.Top,
@@ -110,7 +86,7 @@ fun SavedRecipePage(
                 BackButton(onBackClick)
             }
             Text(
-                text = "Saved Recipes",
+                text = "Disliked Recipes",
                 style = MaterialTheme.typography.titleLarge
             )
         }
