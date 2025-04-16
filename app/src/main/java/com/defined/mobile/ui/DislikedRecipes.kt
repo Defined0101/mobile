@@ -16,13 +16,13 @@ import com.defined.mobile.ui.theme.StyledButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SavedRecipePage(
+fun DislikedRecipePage(
     navController: NavController,
     backActive: Boolean,
     onBackClick: () -> Unit,
     viewModel: RecipeViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
-    // Tüm tarifler (kaydedilmiş tariflerin listesi; örneğin backend'den gelen liste içerisinde filtre uygulayabilirsiniz)
+    // Tüm tarifler (disliked tariflerin listesi; örneğin backend'den gelen liste içerisinde filtre uygulayabilirsiniz)
     val recipesVal by viewModel.recipes.collectAsState()
 
     // SearchScreen ile uyumlu filtre ve sıralama state’leri:
@@ -86,7 +86,7 @@ fun SavedRecipePage(
                 BackButton(onBackClick)
             }
             Text(
-                text = "Saved Recipes",
+                text = "Disliked Recipes",
                 style = MaterialTheme.typography.titleLarge
             )
         }

@@ -2,12 +2,10 @@ package com.defined.mobile.ui
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -20,11 +18,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
-import androidx.compose.material.icons.filled.ExitToApp
+import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.ThumbUp
+import androidx.compose.material.icons.filled.ThumbDown
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -34,11 +32,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
-import com.defined.mobile.R
 import com.defined.mobile.ui.theme.*
 
 // Profile screen with a column of custom buttons
@@ -73,13 +68,23 @@ fun ProfileScreen(navController: NavHostController, viewModel: LoginViewModel) {
         )
         CustomButtonWithIconAndTriangle(
             text = "Saved Recipes",
-            icon = Icons.Default.ThumbUp, // TODO:bookmark doesnt exist
-            onClick = { navController.navigate("savedRecipes") }
+            icon = Icons.Default.Bookmark,
+            onClick = { navController.navigate("savedRecipes/true") }
         )
         CustomButtonWithIconAndTriangle(
             text = "Liked Recipes",
             icon = Icons.Default.Favorite,
             onClick = { navController.navigate("likedRecipes/true") }
+        )
+        CustomButtonWithIconAndTriangle(
+            text = "Disliked Recipes",
+            icon = Icons.Default.ThumbDown,
+            onClick = { navController.navigate("dislikedRecipes/true") }
+        )
+        CustomButtonWithIconAndTriangle(
+            text = "Shopping List",
+            icon = Icons.Default.ThumbDown,
+            onClick = { navController.navigate("shoppingListPage") }
         )
         CustomButtonWithIconAndTriangle(
             text = "Logout",

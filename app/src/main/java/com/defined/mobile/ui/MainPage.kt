@@ -21,10 +21,16 @@ import androidx.navigation.NavController
 import com.defined.mobile.R
 import com.defined.mobile.backend.CategoryViewModel
 import com.defined.mobile.backend.RecipeViewModel
+import com.defined.mobile.backend.ShoppingListViewModel
 import com.defined.mobile.ui.theme.*
 
 @Composable
-fun MainPage(navController: NavController, onSearchClick: () -> Unit) {
+fun MainPage(recipeViewModel: RecipeViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
+             categoryViewModel: CategoryViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
+             shoppingListViewModel: ShoppingListViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
+             navController: NavController,
+             onSearchClick: () -> Unit
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -33,9 +39,29 @@ fun MainPage(navController: NavController, onSearchClick: () -> Unit) {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         TopBar(onSearchClick)
+        SurpriseMeButton(recipeViewModel = recipeViewModel, navController = navController)
         // FeaturedImage()
-        CategorySection()
-        RecipeSection(navController)
+        CategorySection(viewModel = categoryViewModel, navController = navController)
+        RecipeSection(navController, recipeViewModel)
+    }
+}
+
+@Composable
+fun SurpriseMeButton(
+    recipeViewModel: RecipeViewModel,
+    navController: NavController
+) {
+    val surpriseRecipeId by recipeViewModel.surpriseRecipe.collectAsState(initial = 0)
+
+    Button(
+        onClick = {
+            surpriseRecipeId?.let { id ->
+                navController.navigate("recipePage/$id")
+            }
+        },
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Text("Surprise Me")
     }
 }
 
@@ -122,26 +148,25 @@ fun MainPageDivider() {
 }
 
 @Composable
-fun CategorySection(viewModel: CategoryViewModel = androidx.lifecycle.viewmodel.compose.viewModel()) {
+fun CategorySection(viewModel: CategoryViewModel = androidx.lifecycle.viewmodel.compose.viewModel(), navController: NavController) {
     val categories by viewModel.categories.collectAsState()
 
-    // Title for category section
     Text(
         text = "Categories",
-        style = MaterialTheme.typography.titleLarge.copy(
-            fontSize = fontLarge,
-            color = MaterialTheme.colorScheme.primary
-        ),
+        style = MaterialTheme.typography.titleLarge.copy(fontSize = fontLarge, color = MaterialTheme.colorScheme.primary),
         modifier = Modifier.padding(vertical = 6.dp)
     )
     MainPageDivider()
-    // Horizontal list of category items
     LazyRow(
-        contentPadding = PaddingValues(horizontal = 6.dp), // Padding for content
-        horizontalArrangement = Arrangement.spacedBy(6.dp) // Spacing between items
+        contentPadding = PaddingValues(horizontal = 6.dp),
+        horizontalArrangement = Arrangement.spacedBy(6.dp)
     ) {
-        items(categories) { index ->
-            CategoryItem(index) // Placeholder category item
+        items(categories) { category ->
+            // Güncellenmiş CategoryItem: kategori adı ve tıklama callback'i alıyor.
+            CategoryItem(name = category, onClick = {
+                // Kategoriye tıklandığında, SearchScreen'e geçiş yapılırken seçili kategori de argüman olarak gönderiliyor.
+                navController.navigate("search/true/${category}")
+            })
         }
     }
 }

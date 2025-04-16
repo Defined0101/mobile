@@ -2,7 +2,9 @@ package com.defined.mobile.ui
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
@@ -13,61 +15,69 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.defined.mobile.R
-import com.defined.mobile.ui.theme.*
 
 @Composable
-fun CategoryItem(name: String) {
-    // Card component to contain the category item with padding and rounded corners
+fun CategoryItem(
+    name: String,
+    isSelected: Boolean = false,
+    onClick: () -> Unit
+) {
     Card(
         modifier = Modifier
-            .size(110.dp) // Setting the card size
-            .padding(6.dp), // Padding around the card
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.secondaryContainer // Card background color
-        ),
-        shape = MaterialTheme.shapes.medium, // Rounded corners for a softer, modern look
-        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp) // Elevation for shadow effect
+            .size(110.dp)
+            .padding(6.dp)
+            .clickable { onClick() },
+        colors = if (isSelected)
+            CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary)
+        else
+            CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
+        shape = MaterialTheme.shapes.medium,
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
     ) {
-        // Column to arrange components vertically inside the card
         Column(
             modifier = Modifier
-                .fillMaxSize() // Occupies full card size
-                .padding(8.dp), // Padding inside the column
-            horizontalAlignment = Alignment.CenterHorizontally, // Center-align horizontally
-            verticalArrangement = Arrangement.Center // Center content vertically for balanced look
+                .fillMaxSize()
+                .padding(8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
-            // Box for circular background behind the image
             Box(
                 modifier = Modifier
-                    .size(60.dp) // Background size
-                    .clip(circle) // Clips the box to a circular shape
-                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)), // Light background color with transparency
-                contentAlignment = Alignment.Center // Centers image inside the box
+                    .size(60.dp)
+                    .clip(CircleShape)
+                    .background(
+                        if (isSelected)
+                            MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.2f)
+                        else
+                            MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
+                    ),
+                contentAlignment = Alignment.Center
             ) {
-                // Image inside the box with circular clipping
                 Image(
-                    painter = painterResource(id = R.drawable.ic_launcher_foreground), // Image resource
-                    contentDescription = name, // Content description for accessibility
-                    contentScale = ContentScale.Crop, // Crop image to fit dimensions
+                    painter = painterResource(id = R.drawable.ic_launcher_foreground),
+                    contentDescription = name,
+                    contentScale = ContentScale.Crop,
                     modifier = Modifier
-                        .size(48.dp) // Size of the image
-                        .clip(circle) // Clips image to a circular shape for a modern look
+                        .size(48.dp)
+                        .clip(CircleShape)
                 )
             }
 
-            Spacer(modifier = Modifier.height(8.dp)) // Spacer to add space between image and text
+            Spacer(modifier = Modifier.height(8.dp))
 
-            // Text component to display the category name
             Text(
                 text = name,
                 style = MaterialTheme.typography.labelLarge.copy(
-                    fontWeight = SemiBoldWeight, // Semi-bold font for emphasis
-                    color = MaterialTheme.colorScheme.onSecondaryContainer // Text color for readability
+                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.SemiBold,
+                    color = if (isSelected)
+                        MaterialTheme.colorScheme.onPrimary
+                    else
+                        MaterialTheme.colorScheme.onSecondaryContainer
                 ),
-                fontSize = fontSmall, // Font size of the text
-                maxLines = 1 // Restricts text to one line for cleaner look
+                maxLines = 1
             )
         }
     }

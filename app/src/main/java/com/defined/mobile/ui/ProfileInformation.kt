@@ -26,7 +26,7 @@ import com.defined.mobile.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ProfileInformation(viewModel: LoginViewModel, onNavigateBack: () -> Unit, onSave: () -> Unit) {
+fun ProfileInformation(viewModel: LoginViewModel, onNavigateBack: () -> Unit) {
     val currentUser = viewModel.currentUser();
 
     var name by rememberSaveable { mutableStateOf(currentUser?.displayName) }

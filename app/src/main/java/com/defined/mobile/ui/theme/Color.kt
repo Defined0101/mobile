@@ -17,7 +17,7 @@ val LightColorScheme = lightColorScheme(
     error = Color(0xFFB00020),        // Material Design error color
     onError = Color.White,
     secondaryContainer = Color(0xFF424242),
-    surfaceVariant = Color.Black
+    surfaceVariant = Color.Black,
 )
 
 // Updated Dark Color Scheme
@@ -47,6 +47,8 @@ val DefaultChipColor = Color(0xFFCFD8DC)
 val badgeBackground = Color(0xFFE0F7FA)
 val badgeContentColor = Color(0xFF006064)
 val softBlue = Color(0xFF3F51B5)
+val unAvailableColor = Color(0xFFEF9A9A)
+val availableColor = Color(0xFFA5D6A7)
 
 // allergy.kt and preferences.kt
 val brightGreen = Color(0xFF4CAF50)

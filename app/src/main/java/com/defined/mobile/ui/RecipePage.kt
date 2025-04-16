@@ -39,6 +39,7 @@ import com.composables.icons.lucide.WheatOff
 import com.composables.icons.lucide.Zap
 import com.defined.mobile.R
 import com.defined.mobile.backend.RecipeViewModel
+import com.defined.mobile.backend.ShoppingListViewModel
 import java.util.Locale
 import com.defined.mobile.ui.theme.*
 import com.defined.mobile.entities.Recipe
@@ -87,13 +88,21 @@ fun filterDietPreferences(preferences: List<String>?): List<String> {
     return filtered
 }
 
+fun refactorDietPreferences(preferences: List<String>?): List<String> {
+    return preferences?.map { pref ->
+        pref.split("_")
+            .joinToString(" ") { word -> word.replaceFirstChar { it.uppercaseChar() } }
+    } ?: emptyList()
+}
+
 @Composable
 fun IngredientCard(
     ingredient: com.defined.mobile.entities.Ingredient,
-    isAvailable: Boolean, // Burada mevcut olup olmadığını belirleyen flag (şimdilik örnek olarak true veya false olabilir)
-    modifier: Modifier = Modifier
+    isAvailable: Boolean,
+    modifier: Modifier = Modifier,
+    text: String = "empty",
+    isInShoppingList: Boolean = false
 ) {
-    // Mevcut duruma göre arka plan ve içerik rengi belirle
     val backgroundColor = if (isAvailable)
         availableColor
     else
@@ -106,21 +115,37 @@ fun IngredientCard(
     Card(
         modifier = modifier
             .padding(4.dp)
-            .fillMaxWidth(), // Kartın genişliği
+            .fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = backgroundColor),
         shape = MaterialTheme.shapes.medium,
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
-        // Quantity hesaplama: sayısal değeri yuvarlayıp string'e çeviriyoruz
         val qty = ingredient.quantity?.let {
             if (it == kotlin.math.round(it)) it.toInt().toString() else it.toString()
         } ?: ""
-        Text(
-            text = "• $qty ${ingredient.unit.orEmpty()} of ${ingredient.name}",
-            style = MaterialTheme.typography.bodyLarge,
-            color = contentColor,
-            modifier = Modifier.padding(8.dp)
-        )
+        val content = if (text != "empty") "• $text" else "• $qty ${ingredient.unit.orEmpty()} of ${ingredient.name}"
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = content,
+                style = MaterialTheme.typography.bodyLarge,
+                color = contentColor,
+                modifier = Modifier.weight(1f)
+            )
+            if (isInShoppingList)
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_shopping_cart),
+                    contentDescription = "Add to shopping list",
+                    tint = contentColor,
+                    modifier = Modifier.size(20.dp)
+                )
+        }
     }
 }
 
@@ -296,7 +321,11 @@ fun ExpandableRecipeName(recipeName: String) {
 }
 
 @Composable
-fun RecipePage(recipeId: String, onBackClick: () -> Unit, viewModel: RecipeViewModel = androidx.lifecycle.viewmodel.compose.viewModel()) {
+fun RecipePage(recipeId: String,
+               onBackClick: () -> Unit,
+               viewModel: RecipeViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
+               shoppingListViewModel: ShoppingListViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+) {
     val recipeDetails by viewModel.recipeDetails.collectAsState()
 
     // Fetch recipe details when the composable is first launched
@@ -413,9 +442,10 @@ fun RecipePage(recipeId: String, onBackClick: () -> Unit, viewModel: RecipeViewM
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         recipe.Ingredients.forEach { ingredient ->
+                            ingredient.available = Random.nextBoolean()
                             IngredientCard(
                                 ingredient = ingredient,
-                                isAvailable = Random.nextBoolean()
+                                isAvailable = ingredient.available!!
                             )
                         }
                     }
@@ -437,6 +467,19 @@ fun RecipePage(recipeId: String, onBackClick: () -> Unit, viewModel: RecipeViewM
                     )
                 }
             )
+            Button(
+                onClick = {
+                    val unavailableItems = recipe.Ingredients.filter {
+                        it.available == false
+                    }
+                    shoppingListViewModel.addIngredients(unavailableItems)
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+            ) {
+                Text("Add to Shopping List")
+            }
         }
     }
 }

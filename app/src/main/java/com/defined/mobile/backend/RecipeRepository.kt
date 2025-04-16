@@ -10,6 +10,7 @@ class RecipeRepository(private val apiService: ApiService) {
     private var cachedRecipes: List<Recipe>? = null
     private var cachedDislikedRecipes: List<Recipe>? = null
     private var cachedLikedRecipes: List<Recipe>? = null
+    private var cachedSavedRecipes: List<Recipe>? = null
 
     // API çağrısı yapmadan önce cache kontrolü
     suspend fun getRecipes(forceRefresh: Boolean = false): List<Recipe> {
@@ -54,6 +55,20 @@ class RecipeRepository(private val apiService: ApiService) {
         }
     }
 
+    suspend fun getSavedRecipes(userId: String, forceRefresh: Boolean = false): List<Recipe> {
+        return withContext(Dispatchers.IO) {
+            if (forceRefresh || cachedSavedRecipes == null) {
+                try {
+                    cachedSavedRecipes = apiService.getLikedRecipes(userId)
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    cachedSavedRecipes = emptyList()
+                }
+            }
+            cachedSavedRecipes ?: emptyList()
+        }
+    }
+
     // Arama/sorgu yapılırken cache güncellenebilir
     suspend fun searchRecipes(
         queryJson: String,
@@ -79,5 +94,6 @@ class RecipeRepository(private val apiService: ApiService) {
         cachedRecipes = null
         cachedDislikedRecipes = null
         cachedLikedRecipes = null
+        cachedSavedRecipes = null
     }
 }

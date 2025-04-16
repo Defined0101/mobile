@@ -5,7 +5,8 @@ import com.google.gson.annotations.SerializedName
 data class Ingredient(
     @SerializedName("name") val name: String,
     @SerializedName("quantity") val quantity: Float?,
-    @SerializedName("unit") val unit: String?
+    @SerializedName("unit") val unit: String?,
+    @SerializedName("available") var available: Boolean?
 )
 
 data class Recipe (
