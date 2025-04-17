@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.defined.mobile.R
 import com.defined.mobile.backend.RecipeViewModel
+import com.defined.mobile.backend.SavedRecipeViewModel
 import com.defined.mobile.entities.Recipe
 import com.defined.mobile.ui.theme.BackButton
 import com.defined.mobile.ui.theme.DeleteButton
@@ -26,9 +27,15 @@ import com.defined.mobile.ui.theme.StyledButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SavedRecipePage(navController: NavController, onBackClick: () -> Unit, viewModel: RecipeViewModel = androidx.lifecycle.viewmodel.compose.viewModel()) {
+fun SavedRecipePage(
+    userId: String,
+    navController: NavController, onBackClick: () -> Unit,
+    savedRecipeViewModel: SavedRecipeViewModel,
+) {
     // Updated list of recipes with preparation time
-    val savedRecipesVal by viewModel.recipes.collectAsState()
+    //val savedRecipesVal by viewModel.recipes.collectAsState()
+    val savedRecipesVal by savedRecipeViewModel.savedRecipes.collectAsState()
+
     var savedRecipes = savedRecipesVal
     var isModified by remember { mutableStateOf(false) }
 
@@ -75,6 +82,11 @@ fun SavedRecipePage(navController: NavController, onBackClick: () -> Unit, viewM
     fun updateFilteredRecipes() {
         val filtered = applyFilters(savedRecipes)
         filteredRecipes = applySort(filtered)
+    }
+
+    // Fetch liked recipes on userId change
+    LaunchedEffect(userId) {
+        savedRecipeViewModel.fetchSavedRecipes(userId)
     }
 
     Column(
@@ -242,7 +254,7 @@ fun SavedRecipePage(navController: NavController, onBackClick: () -> Unit, viewM
                         modifier = Modifier
                             .weight(1f)
                             .clickable {
-                                navController.navigate("recipePage/$index")
+                                navController.navigate("recipePage/${recipe.ID}")
                             }
                     ) {
                         Text(recipe.Name, style = MaterialTheme.typography.bodyLarge)
@@ -255,6 +267,7 @@ fun SavedRecipePage(navController: NavController, onBackClick: () -> Unit, viewM
                         savedRecipes = savedRecipes.filter { it != recipe }
                         updateFilteredRecipes()
                         isModified = true
+                        savedRecipeViewModel.removeSavedRecipe(userId, recipe)
                     },
                         contentDescription ="Delete Recipe"
                     )

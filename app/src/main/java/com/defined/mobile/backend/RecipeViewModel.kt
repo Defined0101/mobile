@@ -26,8 +26,38 @@ class RecipeViewModel : ViewModel() {
     private fun fetchRecipes() {
         viewModelScope.launch {
             try {
-                val response = RetrofitClient.apiService.getUserRecommendations()
-                _recipes.value = response
+                //val response = RetrofitClient.apiService.getUserRecommendations()
+                //_recipes.value = response
+
+                // Simulating a dummy response with a list of recipes
+                _recipes.value = listOf(
+                    Recipe(
+                        ID = 1,
+                        Name = "Pasta Carbonara",
+                        Instructions = "Cook pasta and mix with eggs, cheese, pancetta, and pepper.",
+                        Ingredients = listOf(),
+                        TotalTime = 30f,
+                        Calories = 450f,
+                        Fat = 12f,
+                        Protein = 15f,
+                        Carbohydrate = 60f,
+                        Category = "Italian",
+                        Label = listOf("Vegetarian")
+                    ),
+                    Recipe(
+                        ID = 2,
+                        Name = "Grilled Chicken",
+                        Instructions = "Grill chicken and serve with vegetables.",
+                        Ingredients = listOf(),
+                        TotalTime = 20f,
+                        Calories = 350f,
+                        Fat = 8f,
+                        Protein = 30f,
+                        Carbohydrate = 15f,
+                        Category = "Grilled",
+                        Label = listOf("Low Fat")
+                    )
+                )
             } catch (e: Exception) {
                 e.printStackTrace()
             }
@@ -37,8 +67,23 @@ class RecipeViewModel : ViewModel() {
     fun fetchRecipeDetails(recipeId: Int) {
         viewModelScope.launch {
             try {
-                val response = RetrofitClient.apiService.getRecipeDetails(recipeId)
-                _recipeDetails.value = response
+                //val response = RetrofitClient.apiService.getRecipeDetails(recipeId)
+                //_recipeDetails.value = response
+
+                val dummyRecipe = Recipe(
+                    ID = recipeId,
+                    Name = "Recipe $recipeId",
+                    Instructions = "Instructions for Recipe $recipeId",
+                    Ingredients = listOf(),
+                    TotalTime = 45f,
+                    Calories = 400f,
+                    Fat = 10f,
+                    Protein = 20f,
+                    Carbohydrate = 50f,
+                    Category = "Category $recipeId",
+                    Label = listOf("Vegetarian")
+                )
+                _recipeDetails.value = dummyRecipe
             } catch (e: Exception) {
                 e.printStackTrace()
             }
@@ -55,7 +100,6 @@ class RecipeViewModel : ViewModel() {
             }
         }
     }
-
 
     fun searchRecipes(queryJson: String, sortByField: String, sortByDirection: String) {
         viewModelScope.launch {

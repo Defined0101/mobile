@@ -7,6 +7,7 @@ import com.defined.mobile.entities.UserIngredients
 import retrofit2.http.GET
 import retrofit2.http.Query
 import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.POST
 
 interface ApiService {
@@ -56,6 +57,52 @@ interface ApiService {
     @GET("getUserIngredients")
     suspend fun getUserIngredients(@Query("user_id") userId: String): UserIngredients
 
-    @POST("setUserAllergies")
+    @POST("setUserIngredients")
     suspend fun setUserIngredients(@Body ingredients: UserIngredients)
+
+    @GET("getUserLikedRecipes")
+    suspend fun getUserLikedRecipes(@Query("user_id") userId: String): List<Recipe>
+
+    @POST("likeRecipe")
+    suspend fun likeRecipe(
+        @Query("user_id") userId: String,
+        @Body recipe: Recipe
+    )
+
+    @DELETE("unlikeRecipe")
+    suspend fun unlikeRecipe(
+        @Query("user_id") userId: String,
+        @Query("recipe_id") recipeId: Int
+    )
+
+    @GET("getUserSavedRecipes")
+    suspend fun getUserSavedRecipes(@Query("user_id") userId: String): List<Recipe>
+
+    @POST("saveRecipe")
+    suspend fun saveRecipe(
+        @Query("user_id") userId: String,
+        @Body recipe: Recipe
+    )
+
+    @DELETE("unsaveRecipe")
+    suspend fun unsaveRecipe(
+        @Query("user_id") userId: String,
+        @Query("recipe_id") recipeId: Int
+    )
+
+    @GET("getUserDislikedRecipes")
+    suspend fun getUserDislikedRecipes(@Query("user_id") userId: String): List<Recipe>
+
+    @POST("dislikeRecipe")
+    suspend fun dislikeRecipe(
+        @Query("user_id") userId: String,
+        @Body recipe: Recipe
+    )
+
+    @DELETE("unDislikeRecipe")
+    suspend fun unDislikeRecipe(
+        @Query("user_id") userId: String,
+        @Query("recipe_id") recipeId: Int
+    )
+
 }
