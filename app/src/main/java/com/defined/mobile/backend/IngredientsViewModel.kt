@@ -6,19 +6,19 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
-class PreferencesViewModel : ViewModel() {
-    private val _preferences = MutableStateFlow<List<String>>(emptyList())
-    val preferences: StateFlow<List<String>> = _preferences
+class IngredientsViewModel : ViewModel() {
+    private val _ingredients = MutableStateFlow<List<String>>(emptyList())
+    val ingredients: StateFlow<List<String>> = _ingredients
 
     init {
-        //fetchPreferences()
+        fetchIngredients()
     }
 
-    private fun fetchPreferences() {
+    fun fetchIngredients() {
         viewModelScope.launch {
             try {
-                val response = RetrofitClient.apiService.getPreferences()
-                _preferences.value = response
+                val response = RetrofitClient.apiService.getIngredients()
+                _ingredients.value = response
             } catch (e: Exception) {
                 e.printStackTrace()
             }

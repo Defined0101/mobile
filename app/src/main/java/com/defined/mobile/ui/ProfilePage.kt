@@ -64,7 +64,7 @@ fun ProfileScreen(navController: NavHostController, viewModel: LoginViewModel) {
             onClick = { navController.navigate("preferences") }
         )
         CustomButtonWithIconAndTriangle(
-            text = "Ingredients",
+            text = "Inventory",
             icon = Icons.Default.ShoppingCart,
             onClick = { navController.navigate("ingredients") }
         )

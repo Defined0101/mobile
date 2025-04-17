@@ -1,21 +1,40 @@
 package com.defined.mobile.ui.theme
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.outlined.ArrowDropDown
+import androidx.compose.material.icons.outlined.FavoriteBorder
+import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import com.defined.mobile.R
 
 @Composable
 fun StyledButton(
@@ -107,3 +126,53 @@ fun EditButton(onClick: () -> Unit, text: String = "Edit Profile") {
         )
     }
 }
+
+@Composable
+fun LikeButton(isLiked: Boolean, onClick: () -> Unit) {
+    val iconColor = LocalContentColor.current
+    IconButton(onClick = {
+        onClick()
+    }) {
+        Image(
+            painter = painterResource(id = if (isLiked) R.drawable.thumbs_up_solid else R.drawable.thumbs_up_regular),
+            contentDescription = "Like",
+            modifier = Modifier.size(24.dp),
+            colorFilter = ColorFilter.tint(iconColor)
+        )
+    }
+}
+
+
+@Composable
+fun DislikeButton(isDisliked: Boolean, onClick: () -> Unit) {
+    val iconColor = LocalContentColor.current
+    IconButton(onClick = {
+        onClick()
+    }) {
+        Image(
+            painter = painterResource(id = if (isDisliked) R.drawable.dislike_fill else R.drawable.dislike_default),
+            contentDescription = "Dislike",
+            modifier = Modifier.size(24.dp),
+            colorFilter = ColorFilter.tint(iconColor)
+        )
+    }
+}
+
+@Composable
+fun SaveRecipeButton(isSaved: Boolean, onClick: () -> Unit) {
+    val iconColor = LocalContentColor.current
+    var saved by remember { mutableStateOf(isSaved) }
+
+    IconButton(onClick = {
+        saved = !saved
+        onClick()
+    }) {
+        Image(
+            painter = painterResource(id = if (saved) R.drawable.bookmark_solid else R.drawable.bookmark_regular),
+            contentDescription = "SaveRecipe",
+            modifier = Modifier.size(20.dp),
+            colorFilter = ColorFilter.tint(iconColor)
+        )
+    }
+}
+
