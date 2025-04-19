@@ -2,9 +2,10 @@ package com.defined.mobile.ui
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
@@ -16,27 +17,18 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import com.defined.mobile.R
+import com.defined.mobile.backend.RecipeViewModel
+import com.defined.mobile.entities.Recipe
 import com.defined.mobile.ui.theme.StyledButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LikedRecipePage(backActive: Boolean, onBackClick: () -> Unit) {
+fun LikedRecipePage(navController: NavController, backActive: Boolean, onBackClick: () -> Unit, viewModel: RecipeViewModel = androidx.lifecycle.viewmodel.compose.viewModel()) {
+    val savedRecipesVal by viewModel.recipes.collectAsState()
+    var savedRecipes = savedRecipesVal
     // Updated list of recipes with preparation time
-    var savedRecipes = listOf(
-        DummyRecipe("Chocolate Cake", listOf("Flour", "Sugar", "Cocoa Powder", "Eggs", "Butter"), listOf("Dessert"), 45),
-        DummyRecipe("Apple Pie", listOf("Apples", "Flour", "Sugar", "Butter", "Cinnamon"), listOf("Dessert"), 60),
-        DummyRecipe("Banana Bread", listOf("Bananas", "Flour", "Sugar", "Butter", "Eggs"), listOf("Dessert"), 50),
-        DummyRecipe("Pancakes", listOf("Flour", "Milk", "Eggs", "Butter", "Sugar"), listOf("Breakfast"), 15),
-        DummyRecipe("Waffles", listOf("Flour", "Milk", "Eggs", "Butter", "Sugar"), listOf("Breakfast"), 20),
-        DummyRecipe("Muffins", listOf("Flour", "Sugar", "Butter", "Eggs", "Baking Powder"), listOf("Dessert"), 30),
-        DummyRecipe("Brownies", listOf("Flour", "Sugar", "Cocoa Powder", "Butter", "Eggs"), listOf("Dessert"), 35),
-        DummyRecipe("Cheesecake", listOf("Cream Cheese", "Sugar", "Butter", "Eggs", "Vanilla Extract"), listOf("Dessert"), 90),
-        DummyRecipe("Cookies", listOf("Flour", "Sugar", "Butter", "Eggs", "Chocolate Chips"), listOf("Snack"), 25),
-        DummyRecipe("Lemon Tart", listOf("Flour", "Sugar", "Lemons", "Butter", "Eggs"), listOf("Dessert"), 40),
-        DummyRecipe("Some Delicious Food", listOf("Flour", "Sugar", "Lemons", "Butter", "Eggs"), listOf("Dessert"), 40),
-        DummyRecipe("BBQ Chicken", listOf("Chicken breasts", "Salt", "BBQ sauce"), listOf("Main Dish", "Dinner", "Lunch"), 50)
-    )
     var isModified by remember { mutableStateOf(false) }
 
 // States for search query, filters, and expanded views
@@ -57,12 +49,12 @@ fun LikedRecipePage(backActive: Boolean, onBackClick: () -> Unit) {
 
 
     // Function to apply filters
-    fun applyFilters(recipes: List<DummyRecipe>): List<DummyRecipe> {
+    fun applyFilters(recipes: List<Recipe>): List<Recipe> {
         return recipes.filter { recipe ->
-            val matchesSearchQuery = searchQuery.isBlank() || recipe.name.contains(searchQuery, ignoreCase = true)
-            val matchesMealType = selectedMealTypes.isEmpty() || selectedMealTypes.any { it in recipe.mealType }
+            val matchesSearchQuery = searchQuery.isBlank() || recipe.Name.contains(searchQuery, ignoreCase = true)
+            val matchesMealType = selectedMealTypes.isEmpty() || selectedMealTypes.any { it in recipe.Label }
             val matchesIngredientFilter = when (selectedIngredientFilter) {
-                "Only with my ingredients" -> recipe.ingredients.containsAll(listOf("Flour", "Sugar")) // TODO: Fix this part after inventory is added
+                "Only with my ingredients" -> true//recipe.Ingredients.containsAll(listOf("Flour", "Sugar")) // TODO: Fix this part after inventory is added
                 else -> true
             }
             matchesSearchQuery && matchesMealType && matchesIngredientFilter
@@ -70,10 +62,10 @@ fun LikedRecipePage(backActive: Boolean, onBackClick: () -> Unit) {
     }
 
     // Function to apply sort
-    fun applySort(recipes: List<DummyRecipe>): List<DummyRecipe> {
+    fun applySort(recipes: List<Recipe>): List<Recipe> {
         return when (selectedSortOption) {
-            "Preparation Time (Ascending)" -> recipes.sortedBy { it.prepTime }
-            "Preparation Time (Descending)" -> recipes.sortedByDescending { it.prepTime }
+            "Preparation Time (Ascending)" -> recipes.sortedBy { it.TotalTime }
+            "Preparation Time (Descending)" -> recipes.sortedByDescending { it.TotalTime }
             else -> recipes
         }
     }
@@ -155,7 +147,7 @@ fun LikedRecipePage(backActive: Boolean, onBackClick: () -> Unit) {
                     modifier = Modifier.weight(1f)
                 ) {
                     StyledButton(
-                        text = "Sort By",
+                        text = "Sort",
                         onClick = { isSortDropdownExpanded = true }
                     )
                     DropdownMenu(
@@ -251,22 +243,25 @@ fun LikedRecipePage(backActive: Boolean, onBackClick: () -> Unit) {
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                items(filteredRecipes.take(5)) { recipe ->
+                itemsIndexed(filteredRecipes.take(5)) { index, recipe ->
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
                             .background(MaterialTheme.colorScheme.surface)
-                            .padding(16.dp),
+                            .padding(16.dp)
+                            .clickable {
+                                navController.navigate("recipePage/$index")
+                            },
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Column(
                             modifier = Modifier.weight(1f)
                         ) {
-                            Text(recipe.name, style = MaterialTheme.typography.bodyLarge)
-                            Text("Meal: ${recipe.mealType.joinToString(", ")}", style = MaterialTheme.typography.bodyMedium)
-                            Text("Preparation Time: ${recipe.prepTime} mins", style = MaterialTheme.typography.bodySmall)
-                            Text("Ingredients: ${recipe.ingredients.joinToString(", ")}", style = MaterialTheme.typography.bodySmall)
+                            Text(recipe.Name, style = MaterialTheme.typography.bodyLarge)
+                            Text("Meal: ${recipe.Label.joinToString(", ")}", style = MaterialTheme.typography.bodyMedium)
+                            Text("Preparation Time: ${recipe.TotalTime} mins", style = MaterialTheme.typography.bodySmall)
+                            Text("Ingredients: ${recipe.Ingredients.joinToString(", ")}", style = MaterialTheme.typography.bodySmall)
                         }
 
                         IconButton(onClick = {

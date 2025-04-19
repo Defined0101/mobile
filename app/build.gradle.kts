@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -40,11 +41,12 @@ android {
 }
 
 dependencies {
-
+    implementation("com.composables:icons-lucide:1.0.0")
     // Core AndroidX Dependencies
     implementation(libs.androidx.core.ktx) // Kotlin extensions for basic Android APIs
     implementation(libs.androidx.lifecycle.runtime.ktx) // Lifecycle management with Kotlin extensions
     implementation(libs.androidx.activity.compose) // Integrates Activity management with Compose
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
 
     // Jetpack Compose Dependencies
     implementation(platform(libs.androidx.compose.bom)) // BOM (Bill of Materials) for consistent Compose versions
@@ -78,13 +80,13 @@ dependencies {
     // Import the BoM for the Firebase platform
     implementation(platform(libs.firebase.bom))
 
-    // Add the dependency for the Firebase Authentication library
-    // When using the BoM, you don't specify versions in Firebase library dependencies
-    implementation(libs.firebase.auth.ktx)
-
     // When using the BoM, don't specify versions in Firebase dependencies
     implementation(libs.firebase.analytics)
 
     // Also add the dependency for the Google Play services library and specify its version
     implementation(libs.play.services.auth)
+
+    // Backend Connection Dependencies
+    implementation(libs.retrofit)
+    implementation(libs.converter.gson)
 }

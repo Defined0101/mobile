@@ -6,6 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
@@ -17,10 +18,13 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import com.defined.mobile.R
+import com.defined.mobile.backend.CategoryViewModel
+import com.defined.mobile.backend.RecipeViewModel
 
 @Composable
-fun MainPage(onSearchClick: () -> Unit) {
+fun MainPage(navController: NavController, onSearchClick: () -> Unit) {
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
@@ -41,7 +45,7 @@ fun MainPage(onSearchClick: () -> Unit) {
             TopBar(onSearchClick)
             // FeaturedImage()
             CategorySection()
-            RecipeSection()
+            RecipeSection(navController)
         }
     }
 }
@@ -130,7 +134,9 @@ fun MainPageDivider() {
 }
 
 @Composable
-fun CategorySection() {
+fun CategorySection(viewModel: CategoryViewModel = androidx.lifecycle.viewmodel.compose.viewModel()) {
+    val categories by viewModel.categories.collectAsState()
+
     // Title for category section
     Text(
         text = "Categories",
@@ -147,14 +153,16 @@ fun CategorySection() {
         contentPadding = PaddingValues(horizontal = 6.dp), // Padding for content
         horizontalArrangement = Arrangement.spacedBy(6.dp) // Spacing between items
     ) {
-        items(10) { index ->
-            CategoryItem("Sample $index") // Placeholder category item
+        items(categories) { index ->
+            CategoryItem(index) // Placeholder category item
         }
     }
 }
 
 @Composable
-fun RecipeSection() {
+fun RecipeSection(navController: NavController, viewModel: RecipeViewModel = androidx.lifecycle.viewmodel.compose.viewModel()) {
+    val recipes by viewModel.recipes.collectAsState()
+
     // Title for recipe section
     Text(
         text = "Recipes",
@@ -171,8 +179,13 @@ fun RecipeSection() {
         contentPadding = PaddingValues(vertical = 6.dp), // Padding for content
         verticalArrangement = Arrangement.spacedBy(6.dp) // Spacing between items
     ) {
-        items(10) { index ->
-            RecipeItem("Recipe Name $index") // Placeholder recipe item
+        items(recipes) { recipe ->
+            RecipeItem(
+                recipe,
+                onClick = {
+                    navController.navigate("recipePage/${recipe.ID}")
+                }
+            )
         }
     }
 }

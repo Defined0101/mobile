@@ -17,6 +17,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ExitToApp
+import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Settings
@@ -34,7 +37,7 @@ import androidx.navigation.NavHostController
 
 // Profile screen with a column of custom buttons
 @Composable
-fun ProfileScreen(navController: NavHostController) {
+fun ProfileScreen(navController: NavHostController, viewModel: LoginViewModel) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -44,28 +47,43 @@ fun ProfileScreen(navController: NavHostController) {
     ) {
         CustomButtonWithIconAndTriangle(
             text = "Profile Information",
-            icon = androidx.compose.material.icons.Icons.Default.Person,
+            icon = Icons.Default.Person,
             onClick = { navController.navigate("profileInformation") }
         )
         CustomButtonWithIconAndTriangle(
             text = "Preferences",
-            icon = androidx.compose.material.icons.Icons.Default.Settings,
+            icon = Icons.Default.Settings,
             onClick = { navController.navigate("preferences") }
         )
         CustomButtonWithIconAndTriangle(
+            text = "Ingredients",
+            icon = Icons.Default.Settings,
+            onClick = { /*navController.navigate("ingredients")*/ }
+        )
+        CustomButtonWithIconAndTriangle(
             text = "Allergies",
-            icon = androidx.compose.material.icons.Icons.Default.Warning,
+            icon = Icons.Default.Warning,
             onClick = { navController.navigate("allergies") }
         )
         CustomButtonWithIconAndTriangle(
             text = "Saved Recipes",
-            icon = androidx.compose.material.icons.Icons.Default.ThumbUp, // TODO:bookmark doesnt exist
-            onClick = { navController.navigate("saved_recipes") }
+            icon = Icons.Default.ThumbUp, // TODO:bookmark doesnt exist
+            onClick = { navController.navigate("savedRecipes") }
         )
         CustomButtonWithIconAndTriangle(
             text = "Liked Recipes",
-            icon = androidx.compose.material.icons.Icons.Default.Favorite,
-            onClick = { navController.navigate("liked_recipes/true") }
+            icon = Icons.Default.Favorite,
+            onClick = { navController.navigate("likedRecipes/true") }
+        )
+        CustomButtonWithIconAndTriangle(
+            text = "Logout",
+            icon = Icons.AutoMirrored.Filled.ExitToApp,
+            onClick = {
+                viewModel.logOut()
+                navController.navigate("login") {
+                    popUpTo("main") { inclusive = true }
+                }
+            }
         )
     }
 }
