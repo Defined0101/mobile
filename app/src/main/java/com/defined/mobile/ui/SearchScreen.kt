@@ -125,13 +125,28 @@ fun SearchScreen(
             selectedPreferences = selectedPreferences,
             onPreferenceToggle = { togglePreference(it) }
         )
-        Text(
-            text = "${displayedRecipes.size} recipes found",
-            style = MaterialTheme.typography.bodyMedium,
+        Row(
             modifier = Modifier
                 .padding(vertical = 8.dp)
-                .align(Alignment.Start)
-        )
+                .align(Alignment.Start),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "${displayedRecipes.size} recipes found",
+                style = MaterialTheme.typography.bodyMedium
+            )
+            // Filtreler boş değilse yanına ek metin
+            if (selectedCategories.isNotEmpty() || selectedPreferences.isNotEmpty()) {
+                // Virgüllerle ayrılmış String
+                val filtersText = (selectedCategories + refactorDietPreferences(selectedPreferences)).joinToString(", ")
+                Text(
+                    text = " ($filtersText)",
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(start = 8.dp)
+                )
+            }
+        }
+
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             verticalArrangement = Arrangement.spacedBy(8.dp)
