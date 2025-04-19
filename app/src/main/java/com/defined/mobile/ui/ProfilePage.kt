@@ -2,10 +2,12 @@ package com.defined.mobile.ui
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -16,7 +18,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.ExitToApp
@@ -26,22 +27,27 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.ThumbUp
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import com.defined.mobile.R
+import com.defined.mobile.ui.theme.*
 
 // Profile screen with a column of custom buttons
 @Composable
 fun ProfileScreen(navController: NavHostController, viewModel: LoginViewModel) {
+
     Column(
         modifier = Modifier
-            .fillMaxSize()
-            .background(Color.White),
+            .fillMaxSize(),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.Start
     ) {
@@ -86,11 +92,13 @@ fun ProfileScreen(navController: NavHostController, viewModel: LoginViewModel) {
             }
         )
     }
+
+
 }
 
 @Composable
 fun CustomButtonWithIconAndTriangle(text: String, icon: ImageVector, onClick: () -> Unit) {
-    val blueColor = Color.Blue
+    val blueColor = MaterialTheme.colorScheme.primary
 
     Row(
         modifier = Modifier
@@ -98,8 +106,8 @@ fun CustomButtonWithIconAndTriangle(text: String, icon: ImageVector, onClick: ()
             .padding(end = 16.dp)
             .padding(vertical = 8.dp)
             .height(60.dp)
-            .background(blueColor, shape = RoundedCornerShape(topEnd = 12.dp, bottomEnd = 12.dp))
-            .border(BorderStroke(2.dp, blueColor), shape = RoundedCornerShape(topEnd = 12.dp, bottomEnd = 12.dp))
+            .background(blueColor, shape = endRoundedShape)
+            .border(BorderStroke(2.dp, blueColor), shape = endRoundedShape)
             .clickable(onClick = onClick), // Make the entire button clickable
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -114,13 +122,13 @@ fun CustomButtonWithIconAndTriangle(text: String, icon: ImageVector, onClick: ()
             Icon(
                 imageVector = icon,
                 contentDescription = "$text Icon",
-                tint = Color.White,
+                tint = MaterialTheme.colorScheme.onPrimary,
                 modifier = Modifier.size(24.dp)
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
                 text = text,
-                color = Color.White
+                color = MaterialTheme.colorScheme.onPrimary
             )
         }
 
@@ -131,6 +139,7 @@ fun CustomButtonWithIconAndTriangle(text: String, icon: ImageVector, onClick: ()
 
 @Composable
 fun TriangleIcon(theColor: Color) {
+    val triangleColor = MaterialTheme.colorScheme.onPrimary
     Canvas(
         modifier = Modifier
             .width(30.dp)
@@ -144,6 +153,6 @@ fun TriangleIcon(theColor: Color) {
             lineTo(0f, 3 * size.height / 4)
             close()
         }
-        drawPath(path, color = Color.White)
+        drawPath(path, color = triangleColor)
     }
 }

@@ -5,14 +5,13 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.defined.mobile.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -53,26 +52,29 @@ fun Preferences(viewModel: PreferencesViewModel, onNavigateBack: () -> Unit) {
     var showDiscardDialog by remember { mutableStateOf(false) } // State for discard confirmation dialog
 
     Scaffold(
+        containerColor = TransparentColor,
         topBar = {
             TopAppBar(
-                title = { Text("Preferences") },
+                title = { Text("Preferences", color = MaterialTheme.colorScheme.onSecondary)},
                 navigationIcon = {
-                    IconButton(onClick = {
+                    BackButton(onNavigateBack = {
                         if (hasChanges) {
                             showDiscardDialog = true // Show dialog if there are unsaved changes
                         } else {
                             onNavigateBack() // Navigate back without confirmation
                         }
-                    }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                    }
-                }
+                    })
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = TransparentColor, // Remove default background
+                    titleContentColor = MaterialTheme.colorScheme.onPrimary, // Adjust text color
+                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimary // Adjust icon color
+                )
             )
         },
         floatingActionButton = {
-            Button(
+            SaveButton(
                 onClick = {
-                    // Save preferences and reset states after saving
                     viewModel.savePreferences(
                         dairyFree = isDairyFree,
                         glutenFree = isGlutenFree,
@@ -80,17 +82,10 @@ fun Preferences(viewModel: PreferencesViewModel, onNavigateBack: () -> Unit) {
                         vegan = isVegan,
                         vegetarian = isVegetarian
                     )
-                    // Reset hasChanges to false after saving
                     hasChanges = false
                 },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = if (hasChanges) MaterialTheme.colorScheme.primary
-                    else MaterialTheme.colorScheme.surfaceVariant
-                ),
-                enabled = hasChanges // Only enable the button if there are changes
-            ) {
-                Text(text = "Save", color = MaterialTheme.colorScheme.onPrimary)
-            }
+                isEnabled = hasChanges
+            )
         }
     ) { padding ->
         Column(
@@ -118,30 +113,19 @@ fun Preferences(viewModel: PreferencesViewModel, onNavigateBack: () -> Unit) {
 
     // Show discard dialog if there are unsaved changes
     if (showDiscardDialog) {
-        AlertDialog(
-            onDismissRequest = { showDiscardDialog = false },
-            title = { Text("Unsaved Changes") },
-            text = { Text("You have unsaved changes. Are you sure you want to leave without saving?") },
-            confirmButton = {
-                TextButton(onClick = {
-                    showDiscardDialog = false
+        UnsavedChangesDialog(
+            onDismiss = { showDiscardDialog = false },
+            onConfirmLeave = {
+                showDiscardDialog = false
 
-                    // Reset temporary states to the original values from the ViewModel
-                    isDairyFree = originalDairyFree
-                    isGlutenFree = originalGlutenFree
-                    isPescetarian = originalPescetarian
-                    isVegan = originalVegan
-                    isVegetarian = originalVegetarian
+                // Reset temporary states to the original values from the ViewModel
+                isDairyFree = originalDairyFree
+                isGlutenFree = originalGlutenFree
+                isPescetarian = originalPescetarian
+                isVegan = originalVegan
+                isVegetarian = originalVegetarian
 
-                    onNavigateBack()
-                }) {
-                    Text("Leave")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showDiscardDialog = false }) {
-                    Text("Stay")
-                }
+                onNavigateBack()
             }
         )
     }
@@ -150,8 +134,8 @@ fun Preferences(viewModel: PreferencesViewModel, onNavigateBack: () -> Unit) {
 @Composable
 fun DietPreferenceCheckbox(label: String, isChecked: Boolean, onCheckedChange: (Boolean) -> Unit) {
     val backgroundColor by animateColorAsState(
-        targetValue = if (isChecked) Color(0xFF4CAF50) // Bright Green when checked
-        else Color(0xFFE0E0E0), // Light Gray when unchecked
+        targetValue = if (isChecked) brightGreen // Bright Green when checked
+        else lightGray, // Light Gray when unchecked
         animationSpec = tween(durationMillis = 300) // Smooth transition
     )
 
@@ -170,14 +154,14 @@ fun DietPreferenceCheckbox(label: String, isChecked: Boolean, onCheckedChange: (
             text = label,
             modifier = Modifier.weight(1f),
             style = MaterialTheme.typography.bodyLarge,
-            color = if (isChecked) Color.White else Color.Black // Change text color for contrast
+            color = if (isChecked) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface // Change text color for contrast
         )
         Checkbox(
             checked = isChecked,
             onCheckedChange = null, // Handled by Row's click
             colors = CheckboxDefaults.colors(
-                checkedColor = Color.White,
-                checkmarkColor = if (isChecked) Color.Black else Color.Transparent // Visible checkmark
+                checkedColor = MaterialTheme.colorScheme.background,
+                checkmarkColor = if (isChecked) MaterialTheme.colorScheme.onBackground else MaterialTheme.colorScheme.surface.copy(alpha = 0f) // Visible checkmark
             )
         )
     }

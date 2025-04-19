@@ -12,6 +12,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.defined.mobile.ui.theme.BackButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -46,9 +47,7 @@ fun IngredientSearch(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            IconButton(onClick = onNavigateBack) {
-                Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-            }
+            BackButton(onNavigateBack)
             Text(
                 text = "Search Ingredients",
                 style = MaterialTheme.typography.titleLarge

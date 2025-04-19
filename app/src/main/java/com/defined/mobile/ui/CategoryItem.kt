@@ -3,8 +3,6 @@ package com.defined.mobile.ui
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
@@ -15,10 +13,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.defined.mobile.R
+import com.defined.mobile.ui.theme.*
 
 @Composable
 fun CategoryItem(name: String) {
@@ -30,7 +27,7 @@ fun CategoryItem(name: String) {
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.secondaryContainer // Card background color
         ),
-        shape = RoundedCornerShape(16.dp), // Rounded corners for a softer, modern look
+        shape = MaterialTheme.shapes.medium, // Rounded corners for a softer, modern look
         elevation = CardDefaults.cardElevation(defaultElevation = 6.dp) // Elevation for shadow effect
     ) {
         // Column to arrange components vertically inside the card
@@ -45,7 +42,7 @@ fun CategoryItem(name: String) {
             Box(
                 modifier = Modifier
                     .size(60.dp) // Background size
-                    .clip(CircleShape) // Clips the box to a circular shape
+                    .clip(circle) // Clips the box to a circular shape
                     .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)), // Light background color with transparency
                 contentAlignment = Alignment.Center // Centers image inside the box
             ) {
@@ -56,7 +53,7 @@ fun CategoryItem(name: String) {
                     contentScale = ContentScale.Crop, // Crop image to fit dimensions
                     modifier = Modifier
                         .size(48.dp) // Size of the image
-                        .clip(CircleShape) // Clips image to a circular shape for a modern look
+                        .clip(circle) // Clips image to a circular shape for a modern look
                 )
             }
 
@@ -66,10 +63,10 @@ fun CategoryItem(name: String) {
             Text(
                 text = name,
                 style = MaterialTheme.typography.labelLarge.copy(
-                    fontWeight = FontWeight.SemiBold, // Semi-bold font for emphasis
+                    fontWeight = SemiBoldWeight, // Semi-bold font for emphasis
                     color = MaterialTheme.colorScheme.onSecondaryContainer // Text color for readability
                 ),
-                fontSize = 14.sp, // Font size of the text
+                fontSize = fontSmall, // Font size of the text
                 maxLines = 1 // Restricts text to one line for cleaner look
             )
         }

@@ -10,7 +10,6 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowDropDown
@@ -30,7 +29,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.composables.icons.lucide.Fish
 import com.composables.icons.lucide.Hop
@@ -42,6 +40,7 @@ import com.composables.icons.lucide.WheatOff
 import com.composables.icons.lucide.Zap
 import com.defined.mobile.R
 import java.util.Locale
+import com.defined.mobile.ui.theme.*
 
 // Recipe data class
 data class RecipeDetail(
@@ -100,12 +99,12 @@ fun getDietIcon(preference: String): ImageVector {
 // Special background color for chip according to diet preferences.
 fun getDietChipColor(preference: String): Color {
     return when (preference.lowercase(Locale.getDefault())) {
-        "vegan" -> Color(0xFFA8E6CF)
-        "vegetarian" -> Color(0xFFC8E6C9)
-        "dairy free" -> Color(0xFFB3E5FC)
-        "gluten free" -> Color(0xFFFFE0B2)
-        "pescetarian" -> Color(0xFFE1BEE7)
-        else -> Color(0xFFCFD8DC)
+        "vegan" -> VeganColor
+        "vegetarian" -> VegetarianColor
+        "dairy free" -> DairyFreeColor
+        "gluten free" -> GlutenFreeColor
+        "pescetarian" -> PescetarianColor
+        else -> DefaultChipColor
     }
 }
 
@@ -133,10 +132,10 @@ fun DietPreferenceChip(
     modifier: Modifier = Modifier
 ) {
     val backgroundColor = getDietChipColor(preference)
-    val contentColor = Color.Black
+    val contentColor = MaterialTheme.colorScheme.onBackground
 
     Surface(
-        shape = RoundedCornerShape(16.dp),
+        shape = MaterialTheme.shapes.medium,
         color = backgroundColor,
         tonalElevation = 2.dp,
         modifier = modifier.padding(horizontal = 4.dp)
@@ -168,11 +167,10 @@ fun InfoBadge(
     label: String,
     modifier: Modifier = Modifier
 ) {
-    val badgeBackground = Color(0xFFE0F7FA)
-    val badgeContentColor = Color(0xFF006064)
+
 
     Surface(
-        shape = RoundedCornerShape(50),
+        shape = fullyRounded,
         color = badgeBackground,
         tonalElevation = 2.dp,
         modifier = modifier.padding(horizontal = 4.dp)
@@ -217,7 +215,7 @@ fun ExpandableSection(
             .fillMaxWidth()
             .clickable { onToggle() },
         color = backgroundColor,
-        shape = RoundedCornerShape(16.dp),
+        shape = MaterialTheme.shapes.medium,
         tonalElevation = 4.dp
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
@@ -235,7 +233,7 @@ fun ExpandableSection(
                 }
                 Text(
                     text = title,
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                    style = MaterialTheme.typography.titleMedium,
                     modifier = Modifier.weight(1f),
                     color = MaterialTheme.colorScheme.onPrimaryContainer
                 )
@@ -270,7 +268,7 @@ fun ExpandableSection(
 @Composable
 fun ExpandableRecipeName(recipeName: String) {
     var expanded by remember { mutableStateOf(false) }
-    val textStyle = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold)
+    val textStyle = MaterialTheme.typography.headlineSmall.copy(fontWeight = BoldWeight)
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -281,7 +279,7 @@ fun ExpandableRecipeName(recipeName: String) {
         Text(
             text = recipeName,
             style = textStyle,
-            color = Color(0xFF3F51B5), // Soft mavi
+            color = softBlue, // Soft blue
             maxLines = if (expanded) Int.MAX_VALUE else 1,
             overflow = if (expanded) TextOverflow.Clip else TextOverflow.Ellipsis,
             textAlign = if (expanded) TextAlign.Justify else TextAlign.Start,
@@ -290,7 +288,7 @@ fun ExpandableRecipeName(recipeName: String) {
         Icon(
             imageVector = Icons.Filled.ArrowDropDown,
             contentDescription = if (expanded) "Collapse" else "Expand",
-            tint = Color(0xFF3F51B5),
+            tint = softBlue,
             modifier = Modifier
                 .size(24.dp)
                 .rotate(if (expanded) 180f else 0f)
@@ -306,151 +304,133 @@ fun RecipePage(recipeId: String, onBackClick: () -> Unit) {
     var ingredientsExpanded by remember { mutableStateOf(false) }
     var instructionsExpanded by remember { mutableStateOf(false) }
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        // Background image
-        Image(
-            painter = painterResource(id = R.drawable.background_image),
-            contentDescription = null,
-            modifier = Modifier.fillMaxSize(),
-            contentScale = ContentScale.Crop
-        )
-        // Translucent overlay
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color.Black.copy(alpha = 0.3f))
-        )
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp)
-                .animateContentSize(),
-            horizontalAlignment = Alignment.CenterHorizontally
+    // Translucent overlay
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
+    )
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+            .animateContentSize(),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        // Top Bar: The line with t
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            // Top Bar: The line with t
+            BackButton(onBackClick)
+        }
+        Spacer(modifier = Modifier.height(8.dp))
+        if (recipe != null) {
+            // Recipe name: Displayed using ExpandableRecipeName.
+            ExpandableRecipeName(recipeName = recipe.name)
+            Spacer(modifier = Modifier.height(8.dp))
+            // Recipe photo and section showing dietary preferences.
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(250.dp)
+            ) {
+                Surface(
+                    shape = MaterialTheme.shapes.medium,
+                    tonalElevation = 4.dp,
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.recipe_sample),
+                        contentDescription = "Recipe Photo",
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .clip(MaterialTheme.shapes.medium),
+                        contentScale = ContentScale.Crop
+                    )
+                }
+                // Dietary preferences are shown if the filtered list is not empty.
+                val filteredPreferences = filterDietPreferences(recipe.dietPreferences)
+                if (filteredPreferences.isNotEmpty()) {
+                    Row(
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f), shape = MaterialTheme.shapes.medium)
+                            .padding(8.dp)
+                            .horizontalScroll(rememberScrollState()),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        filteredPreferences.forEach { preference ->
+                            DietPreferenceChip(preference = preference)
+                        }
+                    }
+                }
+            }
+            Spacer(modifier = Modifier.height(16.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                IconButton(
-                    onClick = onBackClick,
-                    modifier = Modifier.offset(x = (-16).dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Back",
-                        tint = Color.White
-                    )
-                }
+                InfoBadge(
+                    icon = Lucide.Tag,
+                    label = recipe.category,
+                    modifier = Modifier.weight(1f)
+                )
+                InfoBadge(
+                    icon = Lucide.AlarmClock,
+                    label = recipe.totalTime,
+                    modifier = Modifier.weight(1f)
+                )
+                InfoBadge(
+                    icon = Lucide.Zap,
+                    label = recipe.totalCalories,
+                    modifier = Modifier.weight(1f)
+                )
             }
-            Spacer(modifier = Modifier.height(8.dp))
-            if (recipe != null) {
-                // Recipe name: Displayed using ExpandableRecipeName.
-                ExpandableRecipeName(recipeName = recipe.name)
-                Spacer(modifier = Modifier.height(8.dp))
-                // Recipe photo and section showing dietary preferences.
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(250.dp)
-                ) {
-                    Surface(
-                        shape = RoundedCornerShape(16.dp),
-                        tonalElevation = 4.dp,
-                        modifier = Modifier.fillMaxSize()
-                    ) {
-                        Image(
-                            painter = painterResource(id = R.drawable.recipe_sample),
-                            contentDescription = "Recipe Photo",
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .clip(RoundedCornerShape(16.dp)),
-                            contentScale = ContentScale.Crop
-                        )
-                    }
-                    // Dietary preferences are shown if the filtered list is not empty.
-                    val filteredPreferences = filterDietPreferences(recipe.dietPreferences)
-                    if (filteredPreferences.isNotEmpty()) {
-                        Row(
-                            modifier = Modifier
-                                .align(Alignment.BottomEnd)
-                                .background(Color.Black.copy(alpha = 0.5f), shape = RoundedCornerShape(16.dp))
-                                .padding(8.dp)
-                                .horizontalScroll(rememberScrollState()),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            filteredPreferences.forEach { preference ->
-                                DietPreferenceChip(preference = preference)
-                            }
+            Spacer(modifier = Modifier.height(16.dp))
+            ExpandableSection(
+                title = "What do I need?",
+                expanded = ingredientsExpanded,
+                onToggle = { ingredientsExpanded = !ingredientsExpanded },
+                backgroundColor = MaterialTheme.colorScheme.primaryContainer,
+                scrollable = true,
+                leadingIcon = Icons.Filled.ShoppingCart,
+                content = {
+                    Column {
+                        recipe.ingredients.forEach { ingredient ->
+                            Text(
+                                text = "• $ingredient",
+                                style = MaterialTheme.typography.bodyLarge,
+                                modifier = Modifier.padding(start = 8.dp, bottom = 4.dp),
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
                         }
                     }
                 }
-                Spacer(modifier = Modifier.height(16.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    InfoBadge(
-                        icon = Lucide.Tag,
-                        label = recipe.category,
-                        modifier = Modifier.weight(1f)
-                    )
-                    InfoBadge(
-                        icon = Lucide.AlarmClock,
-                        label = recipe.totalTime,
-                        modifier = Modifier.weight(1f)
-                    )
-                    InfoBadge(
-                        icon = Lucide.Zap,
-                        label = recipe.totalCalories,
-                        modifier = Modifier.weight(1f)
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            ExpandableSection(
+                title = "How can I do that?",
+                expanded = instructionsExpanded,
+                onToggle = { instructionsExpanded = !instructionsExpanded },
+                backgroundColor = MaterialTheme.colorScheme.secondaryContainer,
+                scrollable = true,
+                leadingIcon = Lucide.ReceiptText,
+                content = {
+                    Text(
+                        text = recipe.instructions,
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer
                     )
                 }
-                Spacer(modifier = Modifier.height(16.dp))
-                ExpandableSection(
-                    title = "What do I need?",
-                    expanded = ingredientsExpanded,
-                    onToggle = { ingredientsExpanded = !ingredientsExpanded },
-                    backgroundColor = MaterialTheme.colorScheme.primaryContainer,
-                    scrollable = true,
-                    leadingIcon = Icons.Filled.ShoppingCart,
-                    content = {
-                        Column {
-                            recipe.ingredients.forEach { ingredient ->
-                                Text(
-                                    text = "• $ingredient",
-                                    style = MaterialTheme.typography.bodyLarge,
-                                    modifier = Modifier.padding(start = 8.dp, bottom = 4.dp),
-                                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                                )
-                            }
-                        }
-                    }
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-                ExpandableSection(
-                    title = "How can I do that?",
-                    expanded = instructionsExpanded,
-                    onToggle = { instructionsExpanded = !instructionsExpanded },
-                    backgroundColor = MaterialTheme.colorScheme.secondaryContainer,
-                    scrollable = true,
-                    leadingIcon = Lucide.ReceiptText,
-                    content = {
-                        Text(
-                            text = recipe.instructions,
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onSecondaryContainer
-                        )
-                    }
-                )
-            } else {
-                Text(
-                    text = "Recipe not found",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = Color.White,
-                    modifier = Modifier.align(Alignment.CenterHorizontally)
-                )
-            }
+            )
+        } else {
+            Text(
+                text = "Recipe not found",
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onPrimary,
+                modifier = Modifier.align(Alignment.CenterHorizontally)
+            )
         }
     }
 }
@@ -464,7 +444,7 @@ fun InfoCard(
     modifier: Modifier = Modifier
 ) {
     Surface(
-        shape = RoundedCornerShape(16.dp),
+        shape = MaterialTheme.shapes.medium,
         color = backgroundColor,
         tonalElevation = 4.dp,
         modifier = modifier.padding(vertical = 4.dp)
@@ -481,7 +461,7 @@ fun InfoCard(
             )
             Text(
                 text = text,
-                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
+                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = BoldWeight),
                 color = contentColor
             )
         }

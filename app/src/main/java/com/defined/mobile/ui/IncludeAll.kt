@@ -16,6 +16,10 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.compose.foundation.Image
+import androidx.compose.ui.res.painterResource
+import com.defined.mobile.R
+import androidx.compose.ui.layout.ContentScale
 
 @Composable
 fun ScreenWithBottomNav() {
@@ -68,12 +72,14 @@ fun ScreenWithBottomNav() {
                 )
         },
         content = { paddingValues ->
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
-            ) {
-                AppNavigation(navController)
+            BackgroundContainer{
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues)
+                ) {
+                    AppNavigation(navController)
+                }
             }
         }
     )
@@ -178,5 +184,22 @@ fun AppNavigation(navController: NavHostController) {
                 onBackClick = { navController.popBackStack() }
             )
         }
+    }
+}
+
+
+@Composable
+fun BackgroundContainer(content: @Composable () -> Unit) {
+    Box(
+        modifier = Modifier.fillMaxSize()
+    ) {
+        Image(
+            painter = painterResource(id = R.drawable.background_image),
+            contentDescription = "Background image",
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Crop
+        )
+
+        content()
     }
 }
