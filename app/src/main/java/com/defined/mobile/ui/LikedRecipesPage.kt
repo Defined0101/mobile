@@ -11,6 +11,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.defined.mobile.backend.LikedRecipeViewModel
 import com.defined.mobile.backend.RecipeViewModel
 import com.defined.mobile.entities.Recipe
 import com.defined.mobile.ui.theme.BackButton
@@ -20,55 +21,44 @@ import com.defined.mobile.ui.theme.StyledButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LikedRecipePage(navController: NavController, backActive: Boolean, onBackClick: () -> Unit, viewModel: RecipeViewModel = androidx.lifecycle.viewmodel.compose.viewModel()) {
-    val savedRecipesVal by viewModel.recipes.collectAsState()
-    var savedRecipes = savedRecipesVal
-    // Updated list of recipes with preparation time
-    var isModified by remember { mutableStateOf(false) }
+fun LikedRecipePage(
+    userId: String, // Pass user ID
+    navController: NavController,
+    backActive: Boolean,
+    onBackClick: () -> Unit,
+    likedRecipeViewModel: LikedRecipeViewModel,
+) {
+    val likedRecipesVal by likedRecipeViewModel.likedRecipes.collectAsState()
+    //println("LikedRecipePage likedRecipesVal: " + likedRecipesVal)
+    //val likedRecipesVal = sharedViewModel.likedRecipes
 
-// States for search query, filters, and expanded views
+    // States for search query, filters, and sorting
     var searchQuery by remember { mutableStateOf("") }
-    var filteredRecipes by remember { mutableStateOf(savedRecipes) }
-    var isFilterSectionVisible by remember { mutableStateOf(false) }
-    var isMealTypeVisible by remember { mutableStateOf(false) }
-    var isIngredientsVisible by remember { mutableStateOf(false) }
     var selectedMealTypes by remember { mutableStateOf(mutableSetOf<String>()) }
-    var selectedIngredientFilter by remember { mutableStateOf("Any ingredient") }
     var selectedSortOption by remember { mutableStateOf("None") }
     var isSortDropdownExpanded by remember { mutableStateOf(false) }
+    var isFilterSectionVisible by remember { mutableStateOf(false) }
+    var isMealTypeVisible by remember { mutableStateOf(false) }
 
-    // TODO: Extend the sort and filter options
     val mealTypes = listOf("Breakfast", "Lunch", "Dinner", "Dessert", "Snack")
-    val ingredientFilters = listOf("Only with my ingredients", "Any ingredient")
     val sortOptions = listOf("None", "Preparation Time (Ascending)", "Preparation Time (Descending)")
 
-
-    // Function to apply filters
-    fun applyFilters(recipes: List<Recipe>): List<Recipe> {
-        return recipes.filter { recipe ->
-            val matchesSearchQuery = searchQuery.isBlank() || recipe.Name.contains(searchQuery, ignoreCase = true)
-            val matchesMealType = selectedMealTypes.isEmpty() || selectedMealTypes.any { it in recipe.Label }
-            val matchesIngredientFilter = when (selectedIngredientFilter) {
-                "Only with my ingredients" -> true//recipe.Ingredients.containsAll(listOf("Flour", "Sugar")) // TODO: Fix this part after inventory is added
-                else -> true
-            }
-            matchesSearchQuery && matchesMealType && matchesIngredientFilter
-        }
-    }
-
-    // Function to apply sort
-    fun applySort(recipes: List<Recipe>): List<Recipe> {
-        return when (selectedSortOption) {
+    // Apply filters and sorting dynamically
+    val filteredRecipes = likedRecipesVal.filter { recipe ->
+        val matchesSearchQuery = searchQuery.isBlank() || recipe.Name.contains(searchQuery, ignoreCase = true)
+        val matchesMealType = selectedMealTypes.isEmpty() || selectedMealTypes.any { it in recipe.Label }
+        matchesSearchQuery && matchesMealType
+    }.let { recipes ->
+        when (selectedSortOption) {
             "Preparation Time (Ascending)" -> recipes.sortedBy { it.TotalTime }
             "Preparation Time (Descending)" -> recipes.sortedByDescending { it.TotalTime }
             else -> recipes
         }
     }
 
-    // Function to update filtered and sorted list
-    fun updateFilteredRecipes() {
-        val filtered = applyFilters(savedRecipes)
-        filteredRecipes = applySort(filtered)
+    // Fetch liked recipes on userId change
+    LaunchedEffect(userId) {
+        likedRecipeViewModel.fetchLikedRecipes(userId)
     }
 
     Column(
@@ -80,71 +70,41 @@ fun LikedRecipePage(navController: NavController, backActive: Boolean, onBackCli
     ) {
         // Top Bar
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp),
+            modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             if (backActive) {
                 BackButton(onBackClick)
             }
-            Text(
-                text = "Liked Recipes",
-                style = MaterialTheme.typography.titleLarge
-            )
+            Text(text = "Liked Recipes", style = MaterialTheme.typography.titleLarge)
         }
 
+        // Search Bar
         OutlinedTextField(
             value = searchQuery,
-            onValueChange = {
-                searchQuery = it
-                updateFilteredRecipes()
-            },
+            onValueChange = { searchQuery = it },
             placeholder = { Text("Search...") },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp),
+            modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
             colors = TextFieldDefaults.outlinedTextFieldColors()
         )
 
         // Row for Filter and Sort Buttons
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp),
+            modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            // Filter Button
-            StyledButton(
-                text = "Filter",
-                onClick = { isFilterSectionVisible = !isFilterSectionVisible },
-                modifier = Modifier.weight(1f)
-            )
-
+            StyledButton(text = "Filter", onClick = { isFilterSectionVisible = !isFilterSectionVisible }, modifier = Modifier.weight(1f))
             Spacer(modifier = Modifier.width(8.dp))
 
-            // Sort Button
-            Box(
-                modifier = Modifier.weight(1f)
-            ) {
-                StyledButton(
-                    text = "Sort",
-                    onClick = { isSortDropdownExpanded = true }
-                )
-                DropdownMenu(
-                    expanded = isSortDropdownExpanded,
-                    onDismissRequest = { isSortDropdownExpanded = false }
-                ) {
+            Box(modifier = Modifier.weight(1f)) {
+                StyledButton(text = "Sort", onClick = { isSortDropdownExpanded = true })
+                DropdownMenu(expanded = isSortDropdownExpanded, onDismissRequest = { isSortDropdownExpanded = false }) {
                     sortOptions.forEach { option ->
-                        DropdownMenuItem(
-                            text = { Text(option) },
-                            onClick = {
-                                selectedSortOption = option
-                                isSortDropdownExpanded = false
-                                updateFilteredRecipes()
-                            }
-                        )
+                        DropdownMenuItem(text = { Text(option) }, onClick = {
+                            selectedSortOption = option
+                            isSortDropdownExpanded = false
+                        })
                     }
                 }
             }
@@ -159,16 +119,8 @@ fun LikedRecipePage(navController: NavController, backActive: Boolean, onBackCli
                     .background(MaterialTheme.colorScheme.surface)
                     .padding(16.dp)
             ) {
-                // Meal Type Button
-                StyledButton(
-                    text = "Meal Type",
-                    onClick = {
-                        isMealTypeVisible = !isMealTypeVisible
-                        isIngredientsVisible = false // Close the other section
-                    },
-                    modifier = Modifier.fillMaxWidth()
-                )
-
+                // Meal Type Filter
+                StyledButton(text = "Meal Type", onClick = { isMealTypeVisible = !isMealTypeVisible }, modifier = Modifier.fillMaxWidth())
                 if (isMealTypeVisible) {
                     Column {
                         mealTypes.forEach { mealType ->
@@ -176,9 +128,7 @@ fun LikedRecipePage(navController: NavController, backActive: Boolean, onBackCli
                                 Checkbox(
                                     checked = selectedMealTypes.contains(mealType),
                                     onCheckedChange = {
-                                        if (it) selectedMealTypes.add(mealType)
-                                        else selectedMealTypes.remove(mealType)
-                                        updateFilteredRecipes()
+                                        if (it) selectedMealTypes.add(mealType) else selectedMealTypes.remove(mealType)
                                     }
                                 )
                                 Text(mealType, style = MaterialTheme.typography.bodyMedium)
@@ -186,90 +136,40 @@ fun LikedRecipePage(navController: NavController, backActive: Boolean, onBackCli
                         }
                     }
                 }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Ingredients Button
-                StyledButton(
-                    text = "Ingredients",
-                    onClick = {
-                        isIngredientsVisible = !isIngredientsVisible
-                        isMealTypeVisible = false // Close the other section
-                    },
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                if (isIngredientsVisible) {
-                    Column {
-                        ingredientFilters.forEach { option ->
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                RadioButton(
-                                    selected = selectedIngredientFilter == option,
-                                    onClick = {
-                                        selectedIngredientFilter = option
-                                        updateFilteredRecipes()
-                                    }
-                                )
-                                Text(option, style = MaterialTheme.typography.bodyMedium)
-                            }
-                        }
-                    }
-                }
             }
         }
-
-        //TODO: Make the list scrollable
 
         // Recipe List
         LazyColumn(
             modifier = Modifier.weight(1f),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            itemsIndexed(filteredRecipes.take(5)) { index, recipe ->
+            itemsIndexed(filteredRecipes) { index, recipe ->
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .background(MaterialTheme.colorScheme.surface)
                         .padding(16.dp)
-                        .clickable {
-                            navController.navigate("recipePage/$index")
-                        },
+                        .clickable { navController.navigate("recipePage/${recipe.ID}") }, // Use recipe.id instead of index
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Column(
-                        modifier = Modifier.weight(1f)
-                    ) {
+                    Column(modifier = Modifier.weight(1f)) {
                         Text(recipe.Name, style = MaterialTheme.typography.bodyLarge)
                         Text("Meal: ${recipe.Label.joinToString(", ")}", style = MaterialTheme.typography.bodyMedium)
                         Text("Preparation Time: ${recipe.TotalTime} mins", style = MaterialTheme.typography.bodySmall)
                         Text("Ingredients: ${recipe.Ingredients.joinToString(", ")}", style = MaterialTheme.typography.bodySmall)
                     }
 
+                    // delete Button (Deletes Recipe from Liked List)
                     DeleteButton(onClick = {
-                        savedRecipes = savedRecipes.filter { it != recipe }
-                        updateFilteredRecipes()
-                        isModified = true
-                    },
-                        contentDescription ="Delete Recipe"
-                    )
+                        likedRecipeViewModel.removeLikedRecipe(userId, recipe) // Properly updates ViewModel
+                        //sharedViewModel.unlikeRecipe(recipe.ID)
+                    }, contentDescription = "Unlike Recipe")
                 }
             }
         }
     }
-
-    // Save Button
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.BottomEnd
-    ) {
-
-        SaveButton(
-            onClick = {
-                println("Saved Changes")
-                isModified = false
-            },
-            isEnabled = isModified
-        )
-    }
 }
+
+

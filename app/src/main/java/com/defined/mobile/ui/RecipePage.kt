@@ -30,6 +30,9 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.composables.icons.lucide.Fish
 import com.composables.icons.lucide.Hop
 import com.composables.icons.lucide.Leaf
@@ -40,7 +43,11 @@ import com.composables.icons.lucide.WheatOff
 import com.composables.icons.lucide.Zap
 import com.defined.mobile.R
 import com.defined.mobile.backend.CategoryViewModel
+import com.defined.mobile.backend.DislikedRecipeViewModel
+import com.defined.mobile.backend.LikedRecipeViewModel
 import com.defined.mobile.backend.RecipeViewModel
+import com.defined.mobile.backend.SavedRecipeViewModel
+import com.defined.mobile.entities.Recipe
 import java.util.Locale
 import com.defined.mobile.ui.theme.*
 
@@ -299,29 +306,85 @@ fun ExpandableRecipeName(recipeName: String) {
 }
 
 @Composable
-fun RecipePage(recipeId: String, onBackClick: () -> Unit, viewModel: RecipeViewModel = androidx.lifecycle.viewmodel.compose.viewModel()) {
-    val recipeDetails by viewModel.recipeDetails.collectAsState()
+fun RecipePage(
+    userId: String,
+    recipeId: Int, onBackClick: () -> Unit,
+    recipeViewModel: RecipeViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
+    likedRecipeViewModel: LikedRecipeViewModel,
+    dislikedRecipeViewModel: DislikedRecipeViewModel,
+    savedRecipeViewModel: SavedRecipeViewModel,
+) {
+    val recipeDetails by recipeViewModel.recipeDetails.collectAsState()
+    val likedRecipes by likedRecipeViewModel.likedRecipes.collectAsState()
+    val dislikedRecipes by dislikedRecipeViewModel.dislikedRecipes.collectAsState()
+    val savedRecipes by savedRecipeViewModel.savedRecipes.collectAsState()
 
     // Fetch recipe details when the composable is first launched
     LaunchedEffect(recipeId) {
-        val id = recipeId.toIntOrNull() ?: 0
-        viewModel.fetchRecipeDetails(id)
+        recipeViewModel.fetchRecipeDetails(recipeId)
     }
 
     if (recipeDetails != null) {
         //val index = recipeId.toIntOrNull() ?: 0
         //val recipe = dummyRecipes.getOrNull(index)
         val recipe = recipeDetails!!
+        val isLiked = likedRecipes.any { it.ID == recipe.ID } // Check if recipe is liked
+        val isDisliked = dislikedRecipes.any { it.ID == recipe.ID } // Check if recipe is disliked
+        val isSaved = savedRecipes.any { it.ID == recipe.ID } // Check if recipe is saved
 
         var ingredientsExpanded by remember { mutableStateOf(false) }
         var instructionsExpanded by remember { mutableStateOf(false) }
-
         // Translucent overlay
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
-        )
+        ){
+            Row(
+                modifier = Modifier
+                    .align(Alignment.TopEnd) // Aligns the buttons to the top-right
+                    .padding(16.dp),  // Optional padding for spacing from the edges
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                LikeButton(
+                    isLiked = isLiked,
+                    onClick = {
+                        if (isLiked) {
+                            likedRecipeViewModel.removeLikedRecipe(userId, recipe)
+                        } else {
+                            likedRecipeViewModel.likedRecipe(userId, recipe)
+                            if (isDisliked) {
+                                dislikedRecipeViewModel.removeDislikedRecipe(userId, recipe)
+                            }
+                        }
+                    }
+                )
+
+                DislikeButton(
+                    isDisliked = isDisliked,
+                    onClick = {
+                        if (isDisliked) {
+                            dislikedRecipeViewModel.removeDislikedRecipe(userId, recipe)
+                        } else {
+                            dislikedRecipeViewModel.addDislikedRecipe(userId, recipe)
+                            if (isLiked) {
+                                likedRecipeViewModel.removeLikedRecipe(userId, recipe)
+                            }
+                        }
+                    }
+                )
+                SaveRecipeButton(
+                    isSaved = isSaved,
+                    onClick = {
+                        if (isSaved) {
+                            savedRecipeViewModel.removeSavedRecipe(userId, recipe)
+                        } else {
+                            savedRecipeViewModel.savedRecipe(userId, recipe)
+                        }
+                    }
+                )
+            }
+        }
         Column(
             modifier = Modifier
                 .fillMaxSize()
