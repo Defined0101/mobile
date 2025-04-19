@@ -3,6 +3,7 @@ package com.defined.mobile.ui
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
@@ -11,6 +12,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import com.defined.mobile.ui.theme.BackButton
 import androidx.navigation.NavController
 import com.defined.mobile.R
 import com.defined.mobile.backend.ShoppingListViewModel
@@ -20,54 +22,69 @@ import com.defined.mobile.backend.ShoppingListViewModel
 fun ShoppingListPage(
     shoppingListViewModel: ShoppingListViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
     navController: NavController,
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
+    backActive: Boolean = true
 ) {
     val shoppingList by shoppingListViewModel.shoppingList.collectAsState()
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Shopping List") },
-                navigationIcon = {
-                    IconButton(onClick = onBackClick) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
-                    }
-                },
-                actions = {
-                    TextButton(onClick = { shoppingListViewModel.clearList() }) {
-                        Text("Clear")
-                    }
-                }
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        verticalArrangement = Arrangement.Top,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        // Üst bölüm: Geri butonu ve sayfa başlığı
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            if (backActive) {
+                BackButton(onBackClick)
+            }
+            Text(
+                text = "Shopping List",
+                style = MaterialTheme.typography.titleLarge
             )
-        },
-        content = { padding ->
-            if (shoppingList.isEmpty()) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(padding),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text("No ingredients in your shopping list.")
-                }
-            } else {
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(padding),
-                    contentPadding = PaddingValues(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    items(shoppingList) { ingredient ->
-                        IngredientCard(
-                            ingredient = ingredient,
-                            isAvailable = false,
-                            text = ingredient.name,
-                            isInShoppingList = true
-                        )
-                    }
+        }
+
+        // Boşluk veya ayraç eklemek istersen:
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // Alışveriş listesi boş mu?
+        if (shoppingList.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(vertical = 8.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "No ingredients in your shopping list.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
+        } else {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(vertical = 8.dp),
+                contentPadding = PaddingValues(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                items(shoppingList) { ingredient ->
+                    IngredientCard(
+                        ingredient = ingredient,
+                        isAvailable = false,
+                        text = ingredient.name,
+                        isInShoppingList = true
+                    )
                 }
             }
         }
-    )
+    }
 }
