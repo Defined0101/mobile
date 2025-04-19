@@ -20,6 +20,11 @@ import androidx.compose.foundation.Image
 import androidx.compose.ui.res.painterResource
 import com.defined.mobile.R
 import androidx.compose.ui.layout.ContentScale
+import com.defined.mobile.backend.DislikedRecipeViewModel
+import com.defined.mobile.backend.LikedRecipeViewModel
+import com.defined.mobile.backend.PreferencesViewModel
+import com.defined.mobile.backend.SavedRecipeViewModel
+import com.defined.mobile.backend.UserIngredientsViewModel
 
 @Composable
 fun ScreenWithBottomNav() {
@@ -38,7 +43,8 @@ fun ScreenWithBottomNav() {
         "profileInformation" to 3,
         "favourites" to 3,
         "allergies" to 3,
-        "preferences" to 3
+        "preferences" to 3,
+        "ingredients" to 3
     )
 
     var selectedItemIndex by rememberSaveable { mutableStateOf(0) }
@@ -64,7 +70,7 @@ fun ScreenWithBottomNav() {
                         when (index) {
                             0 -> navController.navigate("main") { launchSingleTop = true }
                             1 -> navController.navigate("search/false") { launchSingleTop = true }
-                            2 -> navController.navigate("likedRecipes/false") { launchSingleTop = true }
+                            2 -> navController.navigate("likedRecipes/true") { launchSingleTop = true } // changed false to true
                             3 -> navController.navigate("profile") { launchSingleTop = true }
                         }
                     },
@@ -88,6 +94,12 @@ fun ScreenWithBottomNav() {
 @Composable
 fun AppNavigation(navController: NavHostController) {
     // Shared ViewModel for state management
+    val likedRecipeViewModel: LikedRecipeViewModel = viewModel()
+    val dislikedRecipeViewModel: DislikedRecipeViewModel = viewModel()
+    val savedRecipeViewModel: SavedRecipeViewModel = viewModel()
+
+    val userIngredientsViewModel: UserIngredientsViewModel = viewModel()
+
     val preferencesViewModel: PreferencesViewModel = viewModel()
 
     val viewModel: LoginViewModel = viewModel()
@@ -145,17 +157,31 @@ fun AppNavigation(navController: NavHostController) {
                 onSave = { /* TODO: Implement save logic */ }
             )
         }
-        composable("preferences") {
-            Preferences(
-                viewModel = preferencesViewModel,
-                onNavigateBack = { navController.popBackStack() }
-            )
+        composable("preferences") { backStackEntry ->
+            currentUser?.let { user ->
+                // Pass userId from currentUser to Preferences
+                Preferences(userId = user.uid, onNavigateBack = { navController.popBackStack() })
+            } ?: run {
+                // Handle case when currentUser is null, maybe redirect to login
+                navController.navigate("login") {
+                    popUpTo("login") { inclusive = true } // Clear the back stack if user isn't logged in
+                }
+            }
         }
         composable("allergies") {
-            AllergyPage(
-                navController = navController,
-                onNavigateBack = { navController.popBackStack() }
-            )
+
+            currentUser?.let { user ->
+                println("user.uid: " + user.uid)
+                AllergyPage(
+                    navController = navController,
+                    userId = user.uid, // Pass the userId
+                    onNavigateBack = { navController.popBackStack() }
+                )
+            } ?: run {
+                navController.navigate("login") {
+                    popUpTo("login") { inclusive = true }
+                }
+            }
         }
         composable("ingredientSearch") {
             IngredientSearch(
@@ -164,25 +190,72 @@ fun AppNavigation(navController: NavHostController) {
             )
         }
         composable("savedRecipes") {
-            SavedRecipePage(
-                navController = navController,
-                onBackClick = { navController.popBackStack() }
-            )
+            currentUser?.let { user ->
+                //println("user.uid: " + user.uid)
+                SavedRecipePage(
+                    userId = user.uid,
+                    navController = navController,
+                    onBackClick = { navController.popBackStack() },
+                    savedRecipeViewModel = savedRecipeViewModel
+                )
+            } ?: run {
+                navController.navigate("login") {
+                    popUpTo("login") { inclusive = true }
+                }
+            }
+        }
+        composable("recipePage/{recipeId}") { backStackEntry ->
+            val recipeId = backStackEntry.arguments?.getString("recipeId")?.toIntOrNull() ?: 0
+
+            currentUser?.let { user ->
+                //println("user.uid: " + user.uid)
+                RecipePage(
+                    userId = user.uid,
+                    recipeId = recipeId,
+                    onBackClick = { navController.popBackStack() },
+                    likedRecipeViewModel = likedRecipeViewModel,
+                    savedRecipeViewModel = savedRecipeViewModel,
+                    dislikedRecipeViewModel = dislikedRecipeViewModel
+                )
+            } ?: run {
+                navController.navigate("login") {
+                    popUpTo("login") { inclusive = true }
+                }
+            }
         }
         composable("likedRecipes/{backActive}") { backStackEntry ->
             val backActive = backStackEntry.arguments?.getString("backActive")?.toBoolean() ?: false
-            LikedRecipePage(
-                navController = navController,
-                backActive = backActive,
-                onBackClick = { navController.popBackStack() }
-            )
+
+            currentUser?.let { user ->
+                println("user.uid: " + user.uid)
+                LikedRecipePage(
+                    userId = user.uid,
+                    navController = navController,
+                    backActive = backActive,
+                    onBackClick = { navController.popBackStack() },
+                    likedRecipeViewModel = likedRecipeViewModel
+                )
+            } ?: run {
+                navController.navigate("login") {
+                    popUpTo("login") { inclusive = true }
+                }
+            }
         }
-        composable("recipePage/{recipeId}") { backStackEntry ->
-            val recipeId = backStackEntry.arguments?.getString("recipe_id") ?: "0"
-            RecipePage(
-                recipeId,
-                onBackClick = { navController.popBackStack() }
-            )
+        composable("ingredients") {
+
+            currentUser?.let { user ->
+                println("user.uid: " + user.uid)
+                InventoryPage(
+                    navController = navController,
+                    userId = user.uid, // Pass the userId
+                    onNavigateBack = { navController.popBackStack() },
+                    userIngredientsViewModel = userIngredientsViewModel
+                )
+            } ?: run {
+                navController.navigate("login") {
+                    popUpTo("login") { inclusive = true }
+                }
+            }
         }
     }
 }

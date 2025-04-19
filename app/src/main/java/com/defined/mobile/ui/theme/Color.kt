@@ -17,6 +17,7 @@ val LightColorScheme = lightColorScheme(
     error = Color(0xFFB00020),        // Material Design error color
     onError = Color.White,
     secondaryContainer = Color(0xFF424242),
+    onSecondaryContainer = Color.White,
     surfaceVariant = Color.Black
 )
 
@@ -33,6 +34,7 @@ val DarkColorScheme = darkColorScheme(
     error = Color(0xFFCF6679),        // Softer red for errors in dark mode
     onError = Color.Black,
     secondaryContainer = Color(0xFFA4A0A0),
+    onSecondaryContainer = Color.Black,
     surfaceVariant = Color.Black
 )
 

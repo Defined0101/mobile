@@ -30,6 +30,9 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.composables.icons.lucide.Fish
 import com.composables.icons.lucide.Hop
 import com.composables.icons.lucide.Leaf
@@ -39,6 +42,12 @@ import com.composables.icons.lucide.Vegan
 import com.composables.icons.lucide.WheatOff
 import com.composables.icons.lucide.Zap
 import com.defined.mobile.R
+import com.defined.mobile.backend.CategoryViewModel
+import com.defined.mobile.backend.DislikedRecipeViewModel
+import com.defined.mobile.backend.LikedRecipeViewModel
+import com.defined.mobile.backend.RecipeViewModel
+import com.defined.mobile.backend.SavedRecipeViewModel
+import com.defined.mobile.entities.Recipe
 import java.util.Locale
 import com.defined.mobile.ui.theme.*
 
@@ -297,37 +306,103 @@ fun ExpandableRecipeName(recipeName: String) {
 }
 
 @Composable
-fun RecipePage(recipeId: String, onBackClick: () -> Unit) {
-    val index = recipeId.toIntOrNull() ?: 0
-    val recipe = dummyRecipes.getOrNull(index)
+fun RecipePage(
+    userId: String,
+    recipeId: Int, onBackClick: () -> Unit,
+    recipeViewModel: RecipeViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
+    likedRecipeViewModel: LikedRecipeViewModel,
+    dislikedRecipeViewModel: DislikedRecipeViewModel,
+    savedRecipeViewModel: SavedRecipeViewModel,
+) {
+    val recipeDetails by recipeViewModel.recipeDetails.collectAsState()
+    val likedRecipes by likedRecipeViewModel.likedRecipes.collectAsState()
+    val dislikedRecipes by dislikedRecipeViewModel.dislikedRecipes.collectAsState()
+    val savedRecipes by savedRecipeViewModel.savedRecipes.collectAsState()
 
-    var ingredientsExpanded by remember { mutableStateOf(false) }
-    var instructionsExpanded by remember { mutableStateOf(false) }
+    // Fetch recipe details when the composable is first launched
+    LaunchedEffect(recipeId) {
+        recipeViewModel.fetchRecipeDetails(recipeId)
+    }
 
-    // Translucent overlay
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
-    )
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-            .animateContentSize(),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        // Top Bar: The line with t
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            BackButton(onBackClick)
+    if (recipeDetails != null) {
+        //val index = recipeId.toIntOrNull() ?: 0
+        //val recipe = dummyRecipes.getOrNull(index)
+        val recipe = recipeDetails!!
+        val isLiked = likedRecipes.any { it.ID == recipe.ID } // Check if recipe is liked
+        val isDisliked = dislikedRecipes.any { it.ID == recipe.ID } // Check if recipe is disliked
+        val isSaved = savedRecipes.any { it.ID == recipe.ID } // Check if recipe is saved
+
+        var ingredientsExpanded by remember { mutableStateOf(false) }
+        var instructionsExpanded by remember { mutableStateOf(false) }
+        // Translucent overlay
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
+        ){
+            Row(
+                modifier = Modifier
+                    .align(Alignment.TopEnd) // Aligns the buttons to the top-right
+                    .padding(16.dp),  // Optional padding for spacing from the edges
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                LikeButton(
+                    isLiked = isLiked,
+                    onClick = {
+                        if (isLiked) {
+                            likedRecipeViewModel.removeLikedRecipe(userId, recipe)
+                        } else {
+                            likedRecipeViewModel.likedRecipe(userId, recipe)
+                            if (isDisliked) {
+                                dislikedRecipeViewModel.removeDislikedRecipe(userId, recipe)
+                            }
+                        }
+                    }
+                )
+
+                DislikeButton(
+                    isDisliked = isDisliked,
+                    onClick = {
+                        if (isDisliked) {
+                            dislikedRecipeViewModel.removeDislikedRecipe(userId, recipe)
+                        } else {
+                            dislikedRecipeViewModel.addDislikedRecipe(userId, recipe)
+                            if (isLiked) {
+                                likedRecipeViewModel.removeLikedRecipe(userId, recipe)
+                            }
+                        }
+                    }
+                )
+                SaveRecipeButton(
+                    isSaved = isSaved,
+                    onClick = {
+                        if (isSaved) {
+                            savedRecipeViewModel.removeSavedRecipe(userId, recipe)
+                        } else {
+                            savedRecipeViewModel.savedRecipe(userId, recipe)
+                        }
+                    }
+                )
+            }
         }
-        Spacer(modifier = Modifier.height(8.dp))
-        if (recipe != null) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp)
+                .animateContentSize(),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            // Top Bar: The line with t
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                BackButton(onBackClick)
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+
             // Recipe name: Displayed using ExpandableRecipeName.
-            ExpandableRecipeName(recipeName = recipe.name)
+            ExpandableRecipeName(recipeName = recipe.Name)
             Spacer(modifier = Modifier.height(8.dp))
             // Recipe photo and section showing dietary preferences.
             Box(
@@ -350,12 +425,15 @@ fun RecipePage(recipeId: String, onBackClick: () -> Unit) {
                     )
                 }
                 // Dietary preferences are shown if the filtered list is not empty.
-                val filteredPreferences = filterDietPreferences(recipe.dietPreferences)
+                val filteredPreferences = filterDietPreferences(recipe.Label) // recipe.dietPreferences
                 if (filteredPreferences.isNotEmpty()) {
                     Row(
                         modifier = Modifier
                             .align(Alignment.BottomEnd)
-                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f), shape = MaterialTheme.shapes.medium)
+                            .background(
+                                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                                shape = MaterialTheme.shapes.medium
+                            )
                             .padding(8.dp)
                             .horizontalScroll(rememberScrollState()),
                         verticalAlignment = Alignment.CenterVertically
@@ -373,17 +451,17 @@ fun RecipePage(recipeId: String, onBackClick: () -> Unit) {
             ) {
                 InfoBadge(
                     icon = Lucide.Tag,
-                    label = recipe.category,
+                    label = recipe.Category,
                     modifier = Modifier.weight(1f)
                 )
                 InfoBadge(
                     icon = Lucide.AlarmClock,
-                    label = recipe.totalTime,
+                    label = recipe.TotalTime.toString(),
                     modifier = Modifier.weight(1f)
                 )
                 InfoBadge(
                     icon = Lucide.Zap,
-                    label = recipe.totalCalories,
+                    label = recipe.Calories.toString(),
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -397,7 +475,7 @@ fun RecipePage(recipeId: String, onBackClick: () -> Unit) {
                 leadingIcon = Icons.Filled.ShoppingCart,
                 content = {
                     Column {
-                        recipe.ingredients.forEach { ingredient ->
+                        recipe.Ingredients.forEach { ingredient ->
                             Text(
                                 text = "• $ingredient",
                                 style = MaterialTheme.typography.bodyLarge,
@@ -418,18 +496,11 @@ fun RecipePage(recipeId: String, onBackClick: () -> Unit) {
                 leadingIcon = Lucide.ReceiptText,
                 content = {
                     Text(
-                        text = recipe.instructions,
+                        text = recipe.Instructions,
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onSecondaryContainer
                     )
                 }
-            )
-        } else {
-            Text(
-                text = "Recipe not found",
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onPrimary,
-                modifier = Modifier.align(Alignment.CenterHorizontally)
             )
         }
     }
