@@ -1,7 +1,5 @@
 package com.defined.mobile.ui
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -11,64 +9,81 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.defined.mobile.backend.DislikedRecipeViewModel
 import com.defined.mobile.backend.LikedRecipeViewModel
 import com.defined.mobile.backend.RecipeViewModel
 import com.defined.mobile.entities.Recipe
 import com.defined.mobile.ui.theme.BackButton
-import com.defined.mobile.ui.theme.DeleteButton
-import com.defined.mobile.ui.theme.SaveButton
 import com.defined.mobile.ui.theme.StyledButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LikedRecipePage(
-    userId: String, // Pass user ID
+    userId: String,
     navController: NavController,
     backActive: Boolean,
     onBackClick: () -> Unit,
-    likedRecipeViewModel: LikedRecipeViewModel,
+    likedRecipeViewModel: LikedRecipeViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
-    val likedRecipesVal by likedRecipeViewModel.likedRecipes.collectAsState()
-    //println("LikedRecipePage likedRecipesVal: " + likedRecipesVal)
-    //val likedRecipesVal = sharedViewModel.likedRecipes
+    // Tüm tarifler (disliked tariflerin listesi; örneğin backend'den gelen liste içerisinde filtre uygulayabilirsiniz)
+    val recipesVal by likedRecipeViewModel.likedRecipes.collectAsState()
 
-    // States for search query, filters, and sorting
+    // SearchScreen ile uyumlu filtre ve sıralama state’leri:
     var searchQuery by remember { mutableStateOf("") }
-    var selectedMealTypes by remember { mutableStateOf(mutableSetOf<String>()) }
+    var isFilterPopupVisible by remember { mutableStateOf(false) }
     var selectedSortOption by remember { mutableStateOf("None") }
-    var isSortDropdownExpanded by remember { mutableStateOf(false) }
-    var isFilterSectionVisible by remember { mutableStateOf(false) }
-    var isMealTypeVisible by remember { mutableStateOf(false) }
-
-    val mealTypes = listOf("Breakfast", "Lunch", "Dinner", "Dessert", "Snack")
     val sortOptions = listOf("None", "Preparation Time (Ascending)", "Preparation Time (Descending)")
 
-    // Apply filters and sorting dynamically
-    val filteredRecipes = likedRecipesVal.filter { recipe ->
-        val matchesSearchQuery = searchQuery.isBlank() || recipe.Name.contains(searchQuery, ignoreCase = true)
-        val matchesMealType = selectedMealTypes.isEmpty() || selectedMealTypes.any { it in recipe.Label }
-        matchesSearchQuery && matchesMealType
-    }.let { recipes ->
-        when (selectedSortOption) {
-            "Preparation Time (Ascending)" -> recipes.sortedBy { it.TotalTime }
-            "Preparation Time (Descending)" -> recipes.sortedByDescending { it.TotalTime }
-            else -> recipes
+    // Çoklu kategori seçimi için state (SearchScreen ile aynı)
+    val selectedCategories = remember { mutableStateListOf<String>() }
+    // Çoklu preference seçimi için state (SearchScreen ile aynı)
+    val selectedPreferences = remember { mutableStateListOf<String>() }
+
+    fun toggleCategory(cat: String) {
+        if (selectedCategories.contains(cat)) selectedCategories.remove(cat) else selectedCategories.add(cat)
+    }
+    fun togglePreference(pref: String) {
+        if (selectedPreferences.contains(pref)) selectedPreferences.remove(pref) else selectedPreferences.add(pref)
+    }
+    fun clearFilters() {
+        selectedCategories.clear()
+        selectedPreferences.clear()
+    }
+
+    // Lokal filtreleme & sıralama SearchScreen ile aynı mantıkta:
+    val displayedRecipes = remember(
+        recipesVal,
+        searchQuery,
+        selectedCategories.toList(),
+        selectedPreferences.toList(),
+        selectedSortOption
+    ) {
+        recipesVal.filter { recipe ->
+            // Arama filtresi: boşsa veya tarif ismi içeriyorsa
+            (searchQuery.isEmpty() || recipe.Name.contains(searchQuery, ignoreCase = true)) &&
+                    // Kategori filtresi: seçili kategori varsa tarifin kategorisi listede yer almalı
+                    (selectedCategories.isEmpty() || selectedCategories.contains(recipe.Category)) &&
+                    // Preference filtresi: seçili tüm tercihler tarifin etiketlerinde yer almalı
+                    (selectedPreferences.isEmpty() || selectedPreferences.all { pref -> recipe.Label.contains(pref) })
+        }.let { list ->
+            when (selectedSortOption) {
+                "Preparation Time (Ascending)" -> list.sortedBy { it.TotalTime }
+                "Preparation Time (Descending)" -> list.sortedByDescending { it.TotalTime }
+                else -> list.sortedBy { it.ID }
+            }
         }
     }
 
-    // Fetch liked recipes on userId change
     LaunchedEffect(userId) {
         likedRecipeViewModel.fetchLikedRecipes(userId)
     }
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
+        modifier = Modifier.fillMaxSize().padding(16.dp),
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Top Bar
+        // Üst bölüm: Geri butonu ve sayfa başlığı
         Row(
             modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -77,10 +92,12 @@ fun LikedRecipePage(
             if (backActive) {
                 BackButton(onBackClick)
             }
-            Text(text = "Liked Recipes", style = MaterialTheme.typography.titleLarge)
+            Text(
+                text = "Liked Recipes",
+                style = MaterialTheme.typography.titleLarge
+            )
         }
-
-        // Search Bar
+        // Arama Çubuğu
         OutlinedTextField(
             value = searchQuery,
             onValueChange = { searchQuery = it },
@@ -88,88 +105,38 @@ fun LikedRecipePage(
             modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
             colors = TextFieldDefaults.outlinedTextFieldColors()
         )
-
-        // Row for Filter and Sort Buttons
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            StyledButton(text = "Filter", onClick = { isFilterSectionVisible = !isFilterSectionVisible }, modifier = Modifier.weight(1f))
-            Spacer(modifier = Modifier.width(8.dp))
-
-            Box(modifier = Modifier.weight(1f)) {
-                StyledButton(text = "Sort", onClick = { isSortDropdownExpanded = true })
-                DropdownMenu(expanded = isSortDropdownExpanded, onDismissRequest = { isSortDropdownExpanded = false }) {
-                    sortOptions.forEach { option ->
-                        DropdownMenuItem(text = { Text(option) }, onClick = {
-                            selectedSortOption = option
-                            isSortDropdownExpanded = false
-                        })
-                    }
-                }
-            }
-        }
-
-        // Filter Section
-        if (isFilterSectionVisible) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp)
-                    .background(MaterialTheme.colorScheme.surface)
-                    .padding(16.dp)
-            ) {
-                // Meal Type Filter
-                StyledButton(text = "Meal Type", onClick = { isMealTypeVisible = !isMealTypeVisible }, modifier = Modifier.fillMaxWidth())
-                if (isMealTypeVisible) {
-                    Column {
-                        mealTypes.forEach { mealType ->
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Checkbox(
-                                    checked = selectedMealTypes.contains(mealType),
-                                    onCheckedChange = {
-                                        if (it) selectedMealTypes.add(mealType) else selectedMealTypes.remove(mealType)
-                                    }
-                                )
-                                Text(mealType, style = MaterialTheme.typography.bodyMedium)
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        // Recipe List
+        // Filter ve Sort Row: SearchScreen ile aynı
+        FilterAndSortRow(
+            selectedSortOption = selectedSortOption,
+            onSortSelected = { selectedSortOption = it },
+            sortOptions = sortOptions,
+            onFilterClick = { isFilterPopupVisible = true }
+        )
+        // Filter Popup: SearchScreen ile uyumlu (örnek kategori & preference listeleri kullanılıyor; dilersen ViewModel verisi ile değiştirebilirsin)
+        FilterPopup(
+            isVisible = isFilterPopupVisible,
+            onDismiss = { isFilterPopupVisible = false },
+            onClearFilters = { clearFilters() },
+            categories = listOf("Breakfast", "Lunch", "Dinner", "Dessert", "Snack"),
+            selectedCategories = selectedCategories,
+            onCategoryToggle = { toggleCategory(it) },
+            preferences = listOf("vegan", "vegetarian", "gluten_free", "dairy_free", "pescetarian"),
+            selectedPreferences = selectedPreferences,
+            onPreferenceToggle = { togglePreference(it) }
+        )
+        // Tarif listesi (filtrelenmiş ve sıralanmış)
         LazyColumn(
-            modifier = Modifier.weight(1f),
+            modifier = Modifier.fillMaxSize(),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            itemsIndexed(filteredRecipes) { index, recipe ->
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(MaterialTheme.colorScheme.surface)
-                        .padding(16.dp)
-                        .clickable { navController.navigate("recipePage/${recipe.ID}") }, // Use recipe.id instead of index
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(recipe.Name, style = MaterialTheme.typography.bodyLarge)
-                        Text("Meal: ${recipe.Label.joinToString(", ")}", style = MaterialTheme.typography.bodyMedium)
-                        Text("Preparation Time: ${recipe.TotalTime} mins", style = MaterialTheme.typography.bodySmall)
-                        Text("Ingredients: ${recipe.Ingredients.joinToString(", ")}", style = MaterialTheme.typography.bodySmall)
-                    }
-
-                    // delete Button (Deletes Recipe from Liked List)
-                    DeleteButton(onClick = {
-                        likedRecipeViewModel.removeLikedRecipe(userId, recipe) // Properly updates ViewModel
-                        //sharedViewModel.unlikeRecipe(recipe.ID)
-                    }, contentDescription = "Unlike Recipe")
-                }
+            itemsIndexed(displayedRecipes) { _, recipe ->
+                RecipeItem(
+                    recipe = recipe,
+                    onClick = { navController.navigate("recipePage/${recipe.ID}") },
+                    deleteActive = true,
+                    deleteOnClick = { likedRecipeViewModel.removeLikedRecipe(userId, recipe) }
+                )
             }
         }
     }
 }
-
-

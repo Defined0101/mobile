@@ -18,11 +18,11 @@ import com.defined.mobile.entities.UserPreferences
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Preferences(
-    UserPreferencesViewModel: UserPreferencesViewModel = viewModel(),
+    userPreferencesViewModel: UserPreferencesViewModel = viewModel(),
     userId: String,
     onNavigateBack: () -> Unit
 ) {
-    val userPreferences by UserPreferencesViewModel.userPreferences.collectAsState()
+    val userPreferences by userPreferencesViewModel.userPreferences.collectAsState()
 
     var selectedPreferences by remember { mutableStateOf<Set<String>>(emptySet()) }
     // Flag to detect if there are any changes
@@ -34,7 +34,7 @@ fun Preferences(
 
     // Detect changes dynamically
     LaunchedEffect(userId) {
-        UserPreferencesViewModel.fetchUserPreferences(userId)
+        userPreferencesViewModel.fetchUserPreferences(userId)
     }
 
     // Set selectedPreferences whenever userPreferences are updated
@@ -101,7 +101,7 @@ fun Preferences(
                         )
                     )
                     // Save the updated preferences
-                    UserPreferencesViewModel.updateUserPreferences(updatedPreferences)
+                    userPreferencesViewModel.updateUserPreferences(updatedPreferences)
                     hasChanges = false
                 },
                 isEnabled = hasChanges

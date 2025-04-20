@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.ShoppingCart
 import com.composables.icons.lucide.AlarmClock
@@ -42,56 +41,17 @@ import com.composables.icons.lucide.Vegan
 import com.composables.icons.lucide.WheatOff
 import com.composables.icons.lucide.Zap
 import com.defined.mobile.R
-import com.defined.mobile.backend.CategoryViewModel
 import com.defined.mobile.backend.DislikedRecipeViewModel
 import com.defined.mobile.backend.LikedRecipeViewModel
 import com.defined.mobile.backend.RecipeViewModel
 import com.defined.mobile.backend.SavedRecipeViewModel
-import com.defined.mobile.entities.Recipe
+import com.defined.mobile.backend.ShoppingListViewModel
 import java.util.Locale
 import com.defined.mobile.ui.theme.*
+import com.defined.mobile.entities.Recipe
+import kotlin.math.round
 
-// Recipe data class
-data class RecipeDetail(
-    val name: String,
-    val instructions: String,
-    val ingredients: List<String>,
-    val dietPreferences: List<String>,
-    val category: String,
-    val totalTime: String,
-    val totalCalories: String
-)
-
-// Dummy recipe data. When calling the recipe page, the recipe with the submitted index will be shown.
-val dummyRecipes = listOf(
-    RecipeDetail(
-        name = "Go Oregonian! Oregon Style Pork Chops with Pinot Noir and Cranberries, Oregon Hash with Wild Mushrooms, Greens, Beets, Hazelnuts and Blue Cheese, Charred Whole Grain Bread with Butter and Chives",
-        instructions = "Mix flour, sugar, cocoa powder, eggs and butter. Pour into a greased pan and bake at 350°F for 45 minutes. Mix flour, sugar, cocoa powder, eggs and butter. Pour into a greased pan and bake at 350°F for 45 minutes. Mix flour, sugar, cocoa powder, eggs and butter. Pour into a greased pan and bake at 350°F for 45 minutes",
-        ingredients = listOf("Flour", "Sugar", "Cocoa Powder", "Eggs", "Butter"),
-        dietPreferences = listOf("pescetarian", "gluten free", "vegetarian"),
-        category = "Dessert",
-        totalTime = "45 min",
-        totalCalories = "350 kcal"
-    ),
-    RecipeDetail(
-        name = "Apple Pie",
-        instructions = "Slice apples, mix with cinnamon, sugar and butter. Place in a pastry-lined pan and bake for 60 minutes.",
-        ingredients = listOf("Apples", "Flour", "Sugar", "Butter", "Cinnamon"),
-        dietPreferences = listOf("vegetarian", "gluten free"),
-        category = "Dessert",
-        totalTime = "60 min",
-        totalCalories = "400 kcal"
-    ),
-    RecipeDetail(
-        name = "BBQ Chicken",
-        instructions = "Season chicken breasts with salt and brush with BBQ sauce. Grill until fully cooked.",
-        ingredients = listOf("Chicken breasts", "Salt", "BBQ sauce"),
-        dietPreferences = listOf("gluten free"),
-        category = "Main Course",
-        totalTime = "30 min",
-        totalCalories = "500 kcal"
-    )
-)
+import kotlin.random.Random
 
 // Special icons selection according to diet preferences.
 fun getDietIcon(preference: String): ImageVector {
@@ -134,6 +94,72 @@ fun filterDietPreferences(preferences: List<String>?): List<String> {
     return filtered
 }
 
+fun refactorDietPreferences(preferences: List<String>?): List<String> {
+    return preferences?.map { pref ->
+        pref.split("_")
+            .joinToString(" ") { word -> word.replaceFirstChar { it.uppercaseChar() } }
+    } ?: emptyList()
+}
+
+@Composable
+fun IngredientCard(
+    ingredient: com.defined.mobile.entities.Ingredient,
+    isAvailable: Boolean,
+    modifier: Modifier = Modifier,
+    text: String = "empty",
+    isInShoppingList: Boolean = false,
+    onDeleteClick: () -> Unit = {}
+) {
+    val backgroundColor = if (isAvailable)
+        availableColor
+    else
+        unAvailableColor
+    val contentColor = if (isAvailable)
+        MaterialTheme.colorScheme.onPrimaryContainer
+    else
+        MaterialTheme.colorScheme.onErrorContainer
+
+    Card(
+        modifier = modifier
+            .padding(4.dp)
+            .fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = backgroundColor),
+        shape = MaterialTheme.shapes.medium,
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+    ) {
+        val qty = ingredient.quantity.let {
+            if (it == round(it)) it.toInt().toString() else it.toString()
+        }
+        val content = if (text != "empty") "• $text" else "• $qty ${ingredient.unit} of ${ingredient.name}"
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = content,
+                style = MaterialTheme.typography.bodyLarge,
+                color = contentColor,
+                modifier = Modifier.weight(1f)
+            )
+            if (isInShoppingList) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_shopping_cart),
+                    contentDescription = "Add to shopping list",
+                    tint = contentColor,
+                    modifier = Modifier.size(20.dp)
+                )
+                DeleteButton(
+                    onClick = onDeleteClick
+                )
+            }
+        }
+    }
+}
+
 // Show diet preferences.
 @Composable
 fun DietPreferenceChip(
@@ -169,7 +195,7 @@ fun DietPreferenceChip(
     }
 }
 
-// InfoBadge: Show category, time and calori information.
+// InfoBadge: Show category, time and calorie information.
 @Composable
 fun InfoBadge(
     icon: ImageVector,
@@ -308,11 +334,13 @@ fun ExpandableRecipeName(recipeName: String) {
 @Composable
 fun RecipePage(
     userId: String,
-    recipeId: Int, onBackClick: () -> Unit,
+    recipeId: Int,
+    onBackClick: () -> Unit,
     recipeViewModel: RecipeViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
     likedRecipeViewModel: LikedRecipeViewModel,
     dislikedRecipeViewModel: DislikedRecipeViewModel,
     savedRecipeViewModel: SavedRecipeViewModel,
+    shoppingListViewModel: ShoppingListViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
     val recipeDetails by recipeViewModel.recipeDetails.collectAsState()
     val likedRecipes by likedRecipeViewModel.likedRecipes.collectAsState()
@@ -325,8 +353,6 @@ fun RecipePage(
     }
 
     if (recipeDetails != null) {
-        //val index = recipeId.toIntOrNull() ?: 0
-        //val recipe = dummyRecipes.getOrNull(index)
         val recipe = recipeDetails!!
         val isLiked = likedRecipes.any { it.ID == recipe.ID } // Check if recipe is liked
         val isDisliked = dislikedRecipes.any { it.ID == recipe.ID } // Check if recipe is disliked
@@ -459,9 +485,10 @@ fun RecipePage(
                     label = recipe.TotalTime.toString(),
                     modifier = Modifier.weight(1f)
                 )
+                val calories = if (recipe.Calories == round(recipe.Calories)) recipe.Calories.toInt() else recipe.Calories
                 InfoBadge(
                     icon = Lucide.Zap,
-                    label = recipe.Calories.toString(),
+                    label = calories.toString(),
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -474,13 +501,16 @@ fun RecipePage(
                 scrollable = true,
                 leadingIcon = Icons.Filled.ShoppingCart,
                 content = {
-                    Column {
+                    // Örneğin, her ingredient'ı ayrı bir kart olarak listeleyelim:
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
                         recipe.Ingredients.forEach { ingredient ->
-                            Text(
-                                text = "• $ingredient",
-                                style = MaterialTheme.typography.bodyLarge,
-                                modifier = Modifier.padding(start = 8.dp, bottom = 4.dp),
-                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                            ingredient.available = Random.nextBoolean()
+                            IngredientCard(
+                                ingredient = ingredient,
+                                isAvailable = ingredient.available
                             )
                         }
                     }
@@ -502,6 +532,19 @@ fun RecipePage(
                     )
                 }
             )
+            Button(
+                onClick = {
+                    val unavailableItems = recipe.Ingredients.filter {
+                        it.available == false
+                    }
+                    shoppingListViewModel.addIngredients(unavailableItems)
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+            ) {
+                Text("Add to Shopping List")
+            }
         }
     }
 }

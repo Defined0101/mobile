@@ -1,8 +1,8 @@
 package com.defined.mobile.ui
 
-// Your existing imports
-import androidx.compose.foundation.Image
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -10,87 +10,87 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.*
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.FilterList
+import androidx.compose.material.icons.filled.Sort
 import com.defined.mobile.R
+import com.defined.mobile.backend.CategoryViewModel
+import com.defined.mobile.backend.PreferencesViewModel
 import com.defined.mobile.backend.RecipeViewModel
+import com.defined.mobile.backend.ShoppingListViewModel
 import com.defined.mobile.entities.Recipe
 import com.defined.mobile.ui.theme.StyledButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SearchScreen(navController: NavController, backActive: Boolean, onBackClick: () -> Unit, viewModel: RecipeViewModel = androidx.lifecycle.viewmodel.compose.viewModel()) {
-    // Updated list of recipes with preparation time
-    val recipesVal by viewModel.recipes.collectAsState()
+fun SearchScreen(
+    navController: NavController,
+    backActive: Boolean,
+    onBackClick: () -> Unit,
+    // Yeni parametre: başlangıçtaki seçili kategori (MainPage'den gelecek)
+    initialSelectedCategory: String = "",
+    recipeViewModel: RecipeViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
+    categoryViewModel: CategoryViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
+    preferencesViewModel: PreferencesViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
+    shoppingListViewModel: ShoppingListViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+) {
+    // Tüm tarif listesi (backend'den alınan liste)
+    val recipesVal by recipeViewModel.recipes.collectAsState()
+    val categoriesVal by categoryViewModel.categories.collectAsState()
+    val preferencesVal by preferencesViewModel.preferences.collectAsState()
 
-    // States for search query, filters, and expanded views
     var searchQuery by remember { mutableStateOf("") }
-    //var filteredRecipes by remember { mutableStateOf(recipes) }
-    var isFilterDialogVisible by remember { mutableStateOf(false) }
-    //var isMealTypeVisible by remember { mutableStateOf(false) }
-    //var isIngredientsVisible by remember { mutableStateOf(false) }
-    //var selectedMealTypes by remember { mutableStateOf(mutableSetOf<String>()) }
-    //var selectedIngredientFilter by remember { mutableStateOf("Any ingredient") }
+    var isFilterPopupVisible by remember { mutableStateOf(false) }
     var selectedSortOption by remember { mutableStateOf("None") }
-    var isSortDropdownExpanded by remember { mutableStateOf(false) }
-
-    // TODO: Extend the sort and filter options
-    //val mealTypes = listOf("Breakfast", "Lunch", "Dinner", "Dessert", "Snack")
-    //val ingredientFilters = listOf("Only with my ingredients", "Any ingredient")
     val sortOptions = listOf("None", "Preparation Time (Ascending)", "Preparation Time (Descending)")
 
+    // Çoklu kategori seçimi için state; başlangıçta initialSelectedCategory boş değilse ekle
+    val selectedCategories = remember { mutableStateListOf<String>().apply {
+        if(initialSelectedCategory.isNotEmpty()) add(initialSelectedCategory)
+    } }
+    // Çoklu preference (diyet) seçimi için state
+    val selectedPreferences = remember { mutableStateListOf<String>() }
 
-    // Function to apply filters
-    /*
-    fun applyFilters(recipes: List<Recipe>): List<Recipe> {
-        return recipes.filter { recipe ->
-            val matchesSearchQuery = searchQuery.isBlank() || recipe.Name.contains(searchQuery, ignoreCase = true)
-            val matchesMealType = selectedMealTypes.isEmpty() || selectedMealTypes.any { it in recipe.Label }
-            val matchesIngredientFilter = when (selectedIngredientFilter) {
-                "Only with my ingredients" -> true//recipe.Ingredients.containsAll(listOf("Flour", "Sugar")) // TODO: Fix this part after inventory is added
-                else -> true
+    fun toggleCategory(cat: String) {
+        if (selectedCategories.contains(cat)) selectedCategories.remove(cat)
+        else selectedCategories.add(cat)
+    }
+    fun togglePreference(pref: String) {
+        if (selectedPreferences.contains(pref)) selectedPreferences.remove(pref)
+        else selectedPreferences.add(pref)
+    }
+    fun clearFilters() {
+        selectedCategories.clear()
+        selectedPreferences.clear()
+    }
+
+    // Lokal filtreleme işlemi: Arama, seçili kategoriler ve tercihlere göre
+    val displayedRecipes = remember(
+        recipesVal,
+        searchQuery,
+        selectedCategories.toList(),
+        selectedPreferences.toList(),
+        selectedSortOption
+    ) {
+        recipesVal.filter { recipe ->
+            (searchQuery.isEmpty() || recipe.Name.contains(searchQuery, ignoreCase = true)) &&
+                    (selectedCategories.isEmpty() || selectedCategories.contains(recipe.Category)) &&
+                    (selectedPreferences.isEmpty() || selectedPreferences.all { pref -> recipe.Label.contains(pref) })
+        }.let { list ->
+            when (selectedSortOption) {
+                "Preparation Time (Ascending)" -> list.sortedBy { it.TotalTime }
+                "Preparation Time (Descending)" -> list.sortedByDescending { it.TotalTime }
+                else -> list.sortedBy { it.ID }
             }
-            matchesSearchQuery && matchesMealType && matchesIngredientFilter
         }
-    }
-
-    // Function to apply sort
-    fun applySort(recipes: List<Recipe>): List<Recipe> {
-        return when (selectedSortOption) {
-            "Preparation Time (Ascending)" -> recipes.sortedBy { it.TotalTime }
-            "Preparation Time (Descending)" -> recipes.sortedByDescending { it.TotalTime }
-            else -> recipes
-        }
-    }
-    // Function to update filtered and sorted list
-    fun updateFilteredRecipes() {
-        val filtered = applyFilters(recipes)
-        filteredRecipes = applySort(filtered)
-    }
-     */
-
-    // Handle search and sorting
-    fun handleSearchAndSort() {
-        val queryJson = """{"search": "$searchQuery"}""" // Build dynamic search query as JSON
-        val sortByField = "TotalTime" // Can be dynamic based on selectedSortOption
-        val sortByDirection = if (selectedSortOption.contains("Ascending")) "asc" else "desc"
-
-        // Fetch the filtered and sorted data
-        viewModel.searchRecipes(queryJson, sortByField, sortByDirection)
     }
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
+        modifier = Modifier.fillMaxSize().padding(16.dp),
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -98,93 +98,201 @@ fun SearchScreen(navController: NavController, backActive: Boolean, onBackClick:
             StyledButton(
                 text = "Go Back",
                 onClick = onBackClick,
-                modifier = Modifier
-                    .align(Alignment.Start)
-                    .padding(bottom = 16.dp)
+                modifier = Modifier.align(Alignment.Start).padding(bottom = 16.dp)
             )
         }
-
         OutlinedTextField(
             value = searchQuery,
-            onValueChange = {
-                searchQuery = it
-                handleSearchAndSort()
-            },
+            onValueChange = { searchQuery = it },
             placeholder = { Text("Search...") },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp),
+            modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
             colors = TextFieldDefaults.outlinedTextFieldColors()
         )
-
-        // Row for Filter and Sort Buttons
+        FilterAndSortRow(
+            selectedSortOption = selectedSortOption,
+            onSortSelected = { selectedSortOption = it },
+            sortOptions = sortOptions,
+            onFilterClick = { isFilterPopupVisible = true }
+        )
+        FilterPopup(
+            isVisible = isFilterPopupVisible,
+            onDismiss = { isFilterPopupVisible = false },
+            onClearFilters = { clearFilters() },
+            categories = categoriesVal,
+            selectedCategories = selectedCategories,
+            onCategoryToggle = { toggleCategory(it) },
+            preferences = preferencesVal,
+            selectedPreferences = selectedPreferences,
+            onPreferenceToggle = { togglePreference(it) }
+        )
         Row(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp),
-            horizontalArrangement = Arrangement.SpaceBetween
+                .padding(vertical = 8.dp)
+                .align(Alignment.Start),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            // Filter Button
-            StyledButton(
-                text = "Filter",
-                onClick = { isFilterDialogVisible = true },
-                modifier = Modifier.weight(1f)
+            Text(
+                text = "${displayedRecipes.size} recipes found",
+                style = MaterialTheme.typography.bodyMedium
             )
-
-            Spacer(modifier = Modifier.width(8.dp))
-
-            // Sort Button
-            Box(
-                modifier = Modifier.weight(1f)
-            ) {
-                StyledButton(
-                    text = "Sort",
-                    onClick = { isSortDropdownExpanded = true }
+            // Filtreler boş değilse yanına ek metin
+            if (selectedCategories.isNotEmpty() || selectedPreferences.isNotEmpty()) {
+                // Virgüllerle ayrılmış String
+                val filtersText = (selectedCategories + refactorDietPreferences(selectedPreferences)).joinToString(", ")
+                Text(
+                    text = " ($filtersText)",
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(start = 8.dp)
                 )
-                DropdownMenu(
-                    expanded = isSortDropdownExpanded,
-                    onDismissRequest = { isSortDropdownExpanded = false }
-                ) {
-                    sortOptions.forEach { option ->
-                        DropdownMenuItem(
-                            text = { Text(option) },
-                            onClick = {
-                                selectedSortOption = option
-                                handleSearchAndSort()
-                                isSortDropdownExpanded = false
-                            }
-                        )
-                    }
-                }
             }
         }
 
-        // Recipe List
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            itemsIndexed(recipesVal) { index, recipe ->
+            itemsIndexed(displayedRecipes) { _, recipe ->
                 RecipeItem(
                     recipe = recipe,
-                    onClick = {
-                        navController.navigate("recipePage/$index")
-                    }
+                    onClick = { navController.navigate("recipePage/${recipe.ID}") }
                 )
-//                    Column(
-//                        modifier = Modifier
-//                            .fillMaxWidth()
-//                            .background(MaterialTheme.colorScheme.surface)
-//                            .padding(16.dp)
-//                            .clickable {
-//                                navController.navigate("recipePage/$index")
-//                            }
-//                    ) {
-//                        Text(recipe.name, style = MaterialTheme.typography.bodyLarge)
-//                        Text("Meal: ${recipe.mealType.joinToString(", ")}", style = MaterialTheme.typography.bodyMedium)
-//                        Text("Preparation Time: ${recipe.prepTime} mins", style = MaterialTheme.typography.bodySmall)
-//                        Text("Ingredients: ${recipe.ingredients.joinToString(", ")}", style = MaterialTheme.typography.bodySmall)
-//                    }
+            }
+        }
+    }
+}
+
+@Composable
+fun FilterAndSortRow(
+    selectedSortOption: String,
+    onSortSelected: (String) -> Unit,
+    sortOptions: List<String>,
+    onFilterClick: () -> Unit
+) {
+    var isSortDropdownExpanded by remember { mutableStateOf(false) }
+    val sortButtonWidth = remember { mutableStateOf(0) }
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        OutlinedButton(
+            onClick = onFilterClick,
+            modifier = Modifier.weight(1f).height(56.dp),
+            shape = MaterialTheme.shapes.medium,
+            colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.onSurface),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
+        ) {
+            Icon(imageVector = Icons.Default.FilterList, contentDescription = "Filter", modifier = Modifier.size(20.dp))
+            Spacer(modifier = Modifier.width(8.dp))
+            Text("Filter", style = MaterialTheme.typography.bodyLarge)
+        }
+        Spacer(modifier = Modifier.width(12.dp))
+        OutlinedButton(
+            onClick = { isSortDropdownExpanded = !isSortDropdownExpanded },
+            modifier = Modifier
+                .weight(1f)
+                .height(56.dp)
+                .onGloballyPositioned { coordinates -> sortButtonWidth.value = coordinates.size.width },
+            shape = MaterialTheme.shapes.medium,
+            colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.onSurface),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
+        ) {
+            Icon(imageVector = Icons.Default.Sort, contentDescription = "Sort", modifier = Modifier.size(20.dp))
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(selectedSortOption, style = MaterialTheme.typography.bodyLarge)
+            DropdownMenu(
+                expanded = isSortDropdownExpanded,
+                onDismissRequest = { isSortDropdownExpanded = false },
+                modifier = Modifier
+                    .width(with(LocalDensity.current) { sortButtonWidth.value.toDp() })
+                    .background(color = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f), shape = MaterialTheme.shapes.extraLarge)
+                    .border(BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant), shape = MaterialTheme.shapes.extraLarge)
+                    .padding(vertical = 6.dp)
+            ) {
+                sortOptions.forEachIndexed { index, option ->
+                    DropdownMenuItem(
+                        text = {
+                            Text(text = option, style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(start = 16.dp))
+                        },
+                        onClick = {
+                            onSortSelected(option)
+                            isSortDropdownExpanded = false
+                        },
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 6.dp)
+                    )
+                    if (index != sortOptions.lastIndex) {
+                        Divider(modifier = Modifier.padding(horizontal = 12.dp), thickness = 0.5.dp, color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
+                    }
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun FilterPopup(
+    isVisible: Boolean,
+    onDismiss: () -> Unit,
+    onClearFilters: () -> Unit,
+    categories: List<String>,
+    selectedCategories: List<String>,
+    onCategoryToggle: (String) -> Unit,
+    preferences: List<String>,
+    selectedPreferences: List<String>,
+    onPreferenceToggle: (String) -> Unit
+) {
+    if (isVisible) {
+        ModalBottomSheet(
+            onDismissRequest = onDismiss,
+            dragHandle = { Spacer(modifier = Modifier.height(8.dp)) }
+        ) {
+            Column(
+                modifier = Modifier.fillMaxWidth().padding(16.dp)
+            ) {
+                Text("Filter Options", style = MaterialTheme.typography.headlineSmall)
+                Spacer(modifier = Modifier.height(16.dp))
+                // Kategoriler
+                Text("Categories", style = MaterialTheme.typography.titleMedium)
+                Spacer(modifier = Modifier.height(8.dp))
+                categories.forEach { cat ->
+                    val isChecked = cat in selectedCategories
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(vertical = 4.dp)
+                    ) {
+                        Checkbox(checked = isChecked, onCheckedChange = { onCategoryToggle(cat) })
+                        Text(cat)
+                    }
+                }
+                Divider(modifier = Modifier.padding(vertical = 16.dp))
+                // Preferences
+                Text("Preferences", style = MaterialTheme.typography.titleMedium)
+                Spacer(modifier = Modifier.height(8.dp))
+                val formattedPreferences = refactorDietPreferences(preferences)
+
+                preferences.zip(formattedPreferences).forEach { (pref, displayName) ->
+                    val isChecked = pref in selectedPreferences
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(vertical = 4.dp)
+                    ) {
+                        Checkbox(checked = isChecked, onCheckedChange = { onPreferenceToggle(pref) })
+                        Text(displayName)
+                    }
+                }
+                Spacer(modifier = Modifier.height(24.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    OutlinedButton(
+                        onClick = onClearFilters,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("Clear Filters")
+                    }
+                    Spacer(modifier = Modifier.width(12.dp))
+                }
             }
         }
     }

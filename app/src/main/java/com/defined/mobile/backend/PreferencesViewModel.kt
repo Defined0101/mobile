@@ -7,22 +7,23 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 class PreferencesViewModel : ViewModel() {
+    private val repository = PreferencesRepository(RetrofitClient.apiService)
+
     private val _preferences = MutableStateFlow<List<String>>(emptyList())
     val preferences: StateFlow<List<String>> = _preferences
 
     init {
-        //fetchPreferences()
+        fetchPreferences()
     }
 
-    private fun fetchPreferences() {
+    private fun fetchPreferences(forceRefresh: Boolean = false) {
         viewModelScope.launch {
-            try {
-                val response = RetrofitClient.apiService.getPreferences()
-                _preferences.value = response
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
+            val data = repository.getPreferences(forceRefresh)
+            _preferences.value = data
         }
     }
 
+    fun clearPreferencesCache() {
+        repository.clearCache()
+    }
 }

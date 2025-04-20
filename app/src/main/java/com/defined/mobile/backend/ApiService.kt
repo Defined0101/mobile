@@ -20,6 +20,9 @@ interface ApiService {
     @GET("getRecipeDetails")
     suspend fun getRecipeDetails(@Query("recipe_id") recipeId: Int): Recipe
 
+    @GET("getSurpriseRecipeId")
+    suspend fun getSurpriseRecipeId(@Query("user_id") userId: String): Int
+
     @GET("getRecipeCard")
     suspend fun getRecipeCard(
         @Query("recipe_id") recipeId: Int,
@@ -105,4 +108,9 @@ interface ApiService {
         @Query("recipe_id") recipeId: Int
     )
 
+    @GET("getLikedRecipes")
+    suspend fun getLikedRecipes(@Query("user_id") userId: String): List<Recipe>
+
+    @GET("getDislikedRecipes")
+    suspend fun getDislikedRecipes(@Query("user_id") userId: String): List<Recipe>
 }

@@ -26,12 +26,14 @@ import com.defined.mobile.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ProfileInformation(onNavigateBack: () -> Unit, onSave: () -> Unit) {
-    var name by rememberSaveable { mutableStateOf("Name") }
-    var birthday by rememberSaveable { mutableStateOf("Birthday") }
-    var phoneNumber by rememberSaveable { mutableStateOf("818 123 4567") }
-    var email by rememberSaveable { mutableStateOf("info@aplusdesign.co") }
-    var password by rememberSaveable { mutableStateOf("Password") }
+fun ProfileInformation(viewModel: LoginViewModel, onNavigateBack: () -> Unit) {
+    val currentUser = viewModel.currentUser();
+
+    var name by rememberSaveable { mutableStateOf(currentUser?.displayName) }
+//    var birthday by rememberSaveable { mutableStateOf("Birthday") }
+    var phoneNumber by rememberSaveable { mutableStateOf(currentUser?.phoneNumber) }
+    var email by rememberSaveable { mutableStateOf(currentUser?.email) }
+//    var password by rememberSaveable { mutableStateOf("Password") }
 
     Scaffold(
         containerColor = TransparentColor,
@@ -58,27 +60,35 @@ fun ProfileInformation(onNavigateBack: () -> Unit, onSave: () -> Unit) {
                 modifier = Modifier.fillMaxWidth(),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = name,
-                    color = MaterialTheme.colorScheme.onSecondary,
-                    fontSize = fontLarge
-                )
+                name?.let {
+                    Text(
+                        text = it,
+                        color = MaterialTheme.colorScheme.onSecondary,
+                        fontSize = fontLarge
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
             // Information rows
             Column(modifier = Modifier.padding(horizontal = 16.dp)) {
-                ProfileInfoRow(Icons.Default.DateRange, "Birthday", birthday, onValueChange = { birthday = it })
-                ProfileInfoRow(Icons.Default.Phone, "Phone Number", phoneNumber, onValueChange = { phoneNumber = it })
-                ProfileInfoRow(Icons.Default.Email, "Email", email, onValueChange = { email = it })
-                ProfileInfoRow(Icons.Default.Lock, "Password", password, onValueChange = { password = it })
+//                ProfileInfoRow(Icons.Default.DateRange, "Birthday", birthday, onValueChange = { birthday = it })
+                phoneNumber?.let { it ->
+                    ProfileInfoRow(Icons.Default.Phone, "Phone Number",
+                        it, onValueChange = { phoneNumber = it })
+                }
+                email?.let {
+                    ProfileInfoRow(Icons.Default.Email, "Email",
+                        it, onValueChange = { email = it })
+                }
+//                 ProfileInfoRow(Icons.Default.Lock, "Password", password, onValueChange = { password = it })
             }
 
             Spacer(modifier = Modifier.weight(1f))
 
             // Bottom button with gradient
-            EditButton(onClick = onSave)
+//            EditButton(onClick = onSave)
         }
     }
 }
@@ -128,7 +138,8 @@ fun ProfileInfoRow(icon: ImageVector, label: String, value: String, onValueChang
                     focusedIndicatorColor = TransparentColor, // Remove underline
                     unfocusedIndicatorColor = TransparentColor
                 ),
-                textStyle = LocalTextStyle.current.copy(color = MaterialTheme.colorScheme.onSurface)
+                textStyle = LocalTextStyle.current.copy(color = MaterialTheme.colorScheme.onSurface),
+                readOnly = true
             )
         }
     }

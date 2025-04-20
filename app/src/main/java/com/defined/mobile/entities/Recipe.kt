@@ -2,7 +2,6 @@ package com.defined.mobile.entities
 
 import com.google.gson.annotations.SerializedName
 
-
 data class Recipe (
     val ID: Int,
     val Name: String,

@@ -12,52 +12,69 @@ class RecipeViewModel : ViewModel() {
     private val _recipes = MutableStateFlow<List<Recipe>>(emptyList())
     val recipes: StateFlow<List<Recipe>> = _recipes
 
+    private val _dislikedRecipes = MutableStateFlow<List<Recipe>>(emptyList())
+    val dislikedRecipes: StateFlow<List<Recipe>> = _dislikedRecipes
+
+    private val _likedRecipes = MutableStateFlow<List<Recipe>>(emptyList())
+    val likedRecipes: StateFlow<List<Recipe>> = _likedRecipes
+
+    private val _savedRecipes = MutableStateFlow<List<Recipe>>(emptyList())
+    val savedRecipes: StateFlow<List<Recipe>> = _savedRecipes
+
     private val _recipeDetails = MutableStateFlow<Recipe?>(null)
     val recipeDetails: StateFlow<Recipe?> = _recipeDetails
 
+    private val _surpriseRecipe = MutableStateFlow<Int>(0)
+    val surpriseRecipe: StateFlow<Int> = _surpriseRecipe
+
     private val _recipeCard = MutableStateFlow<Map<String, Any>?>(null)
     val recipeCard: StateFlow<Map<String, Any>?> = _recipeCard
+
+    private val repository = RecipeRepository(RetrofitClient.apiService)
 
     init {
         fetchRecipes()
         print(recipes)
     }
 
-    private fun fetchRecipes() {
+    private fun fetchRecipes(forceRefresh: Boolean = false) {
         viewModelScope.launch {
             try {
-                //val response = RetrofitClient.apiService.getUserRecommendations()
-                //_recipes.value = response
+                val recipesList = repository.getRecipes(forceRefresh)
+                _recipes.value = recipesList
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
 
-                // Simulating a dummy response with a list of recipes
-                _recipes.value = listOf(
-                    Recipe(
-                        ID = 1,
-                        Name = "Pasta Carbonara",
-                        Instructions = "Cook pasta and mix with eggs, cheese, pancetta, and pepper.",
-                        Ingredients = listOf(),
-                        TotalTime = 30f,
-                        Calories = 450f,
-                        Fat = 12f,
-                        Protein = 15f,
-                        Carbohydrate = 60f,
-                        Category = "Italian",
-                        Label = listOf("Vegetarian")
-                    ),
-                    Recipe(
-                        ID = 2,
-                        Name = "Grilled Chicken",
-                        Instructions = "Grill chicken and serve with vegetables.",
-                        Ingredients = listOf(),
-                        TotalTime = 20f,
-                        Calories = 350f,
-                        Fat = 8f,
-                        Protein = 30f,
-                        Carbohydrate = 15f,
-                        Category = "Grilled",
-                        Label = listOf("Low Fat")
-                    )
-                )
+    private fun fetchLikedRecipes(userId: String, forceRefresh: Boolean = false) {
+        viewModelScope.launch {
+            try {
+                val recipesList = repository.getLikedRecipes(userId, forceRefresh)
+                _dislikedRecipes.value = recipesList
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    private fun fetchDislikedRecipes(userId: String, forceRefresh: Boolean = false) {
+        viewModelScope.launch {
+            try {
+                val recipesList = repository.getDislikedRecipes(userId, forceRefresh)
+                _likedRecipes.value = recipesList
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    private fun fetchSavedRecipes(userId: String, forceRefresh: Boolean = false) {
+        viewModelScope.launch {
+            try {
+                val recipesList = repository.getSavedRecipes(userId, forceRefresh)
+                _savedRecipes.value = recipesList
             } catch (e: Exception) {
                 e.printStackTrace()
             }
@@ -67,23 +84,20 @@ class RecipeViewModel : ViewModel() {
     fun fetchRecipeDetails(recipeId: Int) {
         viewModelScope.launch {
             try {
-                //val response = RetrofitClient.apiService.getRecipeDetails(recipeId)
-                //_recipeDetails.value = response
+                val response = RetrofitClient.apiService.getRecipeDetails(recipeId)
+                _recipeDetails.value = response
 
-                val dummyRecipe = Recipe(
-                    ID = recipeId,
-                    Name = "Recipe $recipeId",
-                    Instructions = "Instructions for Recipe $recipeId",
-                    Ingredients = listOf(),
-                    TotalTime = 45f,
-                    Calories = 400f,
-                    Fat = 10f,
-                    Protein = 20f,
-                    Carbohydrate = 50f,
-                    Category = "Category $recipeId",
-                    Label = listOf("Vegetarian")
-                )
-                _recipeDetails.value = dummyRecipe
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    fun fetchSurpriseRecipeId(userId: String) {
+        viewModelScope.launch {
+            try {
+                val response = RetrofitClient.apiService.getSurpriseRecipeId(userId)
+                _surpriseRecipe.value = response
             } catch (e: Exception) {
                 e.printStackTrace()
             }
@@ -101,15 +115,19 @@ class RecipeViewModel : ViewModel() {
         }
     }
 
-    fun searchRecipes(queryJson: String, sortByField: String, sortByDirection: String) {
+    fun searchRecipes(queryJson: String, sortByField: String, sortByDirection: String, forceRefresh: Boolean = false) {
         viewModelScope.launch {
             try {
                 val encodedQuery = URLEncoder.encode(queryJson, "UTF-8") // Ensure safe URL encoding
-                val response = RetrofitClient.apiService.queryRecipes(encodedQuery, sortByField, sortByDirection)
-                _recipes.value = response
+                val recipesList = repository.searchRecipes(encodedQuery, sortByField, sortByDirection, forceRefresh)
+                _recipes.value = recipesList
             } catch (e: Exception) {
                 e.printStackTrace()
             }
         }
+    }
+
+    fun clearCache() {
+        repository.clearCache()
     }
 }
