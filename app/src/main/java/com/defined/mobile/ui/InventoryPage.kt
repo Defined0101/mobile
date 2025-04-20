@@ -90,30 +90,23 @@ fun InventoryPage(
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            BackButton(onNavigateBack = {
+        ScreenHeader(
+            title = "Inventory",
+            onNavigateBack = {
                 if (isModified) {
                     showDiscardDialog = true
                 } else {
                     onNavigateBack()
                 }
-            })
-            Text(
-                text = "Inventory",
-                style = MaterialTheme.typography.titleLarge
-            )
-            IconButton(onClick = {
-                navController.navigate("ingredientSearch")
-            }) {
-                Icon(imageVector = Icons.Filled.Add, contentDescription = "Add Ingredient")
+            },
+            rightContent = {
+                IconButton(onClick = {
+                    navController.navigate("ingredientSearch")
+                }) {
+                    Icon(imageVector = Icons.Filled.Add, contentDescription = "Add Ingredient")
+                }
             }
-        }
+        )
 
         Box(
             modifier = Modifier

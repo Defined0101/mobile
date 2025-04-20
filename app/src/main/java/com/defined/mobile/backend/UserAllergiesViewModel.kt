@@ -26,7 +26,7 @@ class UserAllergiesViewModel : ViewModel() {
 
 
     fun updateUserAllergies(allergies: UserAllergies) {
-        println("allergies: "+ allergies)
+        println(" updateUserAllergies allergies: "+ allergies)
         viewModelScope.launch {
             try {
                 RetrofitClient.apiService.setUserAllergies(allergies)

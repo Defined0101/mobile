@@ -83,19 +83,11 @@ fun DislikedRecipePage(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         // Üst bölüm: Geri butonu ve sayfa başlığı
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            if (backActive) {
-                BackButton(onBackClick)
-            }
-            Text(
-                text = "Disliked Recipes",
-                style = MaterialTheme.typography.titleLarge
-            )
-        }
+        ScreenHeader(
+            title = "Disliked Recipes",
+            onNavigateBack = onBackClick
+        )
+
         // Arama Çubuğu
         OutlinedTextField(
             value = searchQuery,

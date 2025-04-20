@@ -67,24 +67,20 @@ fun Preferences(
 
     Scaffold(
         containerColor = TransparentColor,
+
         topBar = {
-            TopAppBar(
-                title = { Text("Preferences", color = MaterialTheme.colorScheme.onSecondary)},
-                navigationIcon = {
-                    BackButton(onNavigateBack = {
+            Column(modifier = Modifier.padding(top = 16.dp, start = 16.dp)) {
+                ScreenHeader(
+                    title = "Preferences",
+                    onNavigateBack = {
                         if (hasChanges) {
-                            showDiscardDialog = true // Show dialog if there are unsaved changes
+                            showDiscardDialog = true
                         } else {
-                            onNavigateBack() // Navigate back without confirmation
+                            onNavigateBack()
                         }
-                    })
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = TransparentColor, // Remove default background
-                    titleContentColor = MaterialTheme.colorScheme.onPrimary, // Adjust text color
-                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimary // Adjust icon color
+                    }
                 )
-            )
+            }
         },
         floatingActionButton = {
             SaveButton(

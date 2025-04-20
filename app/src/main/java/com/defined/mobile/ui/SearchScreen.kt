@@ -94,6 +94,13 @@ fun SearchScreen(
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+
+        ScreenHeader(
+            title = "",
+            onNavigateBack = onBackClick
+        )
+
+        /*
         if (backActive) {
             StyledButton(
                 text = "Go Back",
@@ -101,6 +108,7 @@ fun SearchScreen(
                 modifier = Modifier.align(Alignment.Start).padding(bottom = 16.dp)
             )
         }
+         */
         OutlinedTextField(
             value = searchQuery,
             onValueChange = { searchQuery = it },

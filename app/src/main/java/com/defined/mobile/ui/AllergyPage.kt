@@ -19,7 +19,6 @@ import com.defined.mobile.entities.UserAllergies
 //TODO: Connect to database
 //TODO: Only one ingredient can be selected. After db connection fix it to multiple
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AllergyPage(
     userAllergiesViewModel: UserAllergiesViewModel = viewModel(),
@@ -72,31 +71,23 @@ fun AllergyPage(
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        // Top Bar
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            BackButton(onNavigateBack = {
+        ScreenHeader(
+            title = "Allergies",
+            onNavigateBack = {
                 if (isModified) {
-                    showDiscardDialog = true // Show dialog if there are unsaved changes
+                    showDiscardDialog = true
                 } else {
-                    onNavigateBack() // Navigate back without confirmation
+                    onNavigateBack()
                 }
-            })
-            Text(
-                text = "Allergies",
-                style = MaterialTheme.typography.titleLarge
-            )
-            IconButton(onClick = {
-                navController.navigate("ingredientSearch") // Navigate to IngredientSearch
-            }) {
-                Icon(imageVector = Icons.Filled.Add, contentDescription = "Add Ingredient")
+            },
+            rightContent = {
+                IconButton(onClick = {
+                    navController.navigate("ingredientSearch")
+                }) {
+                    Icon(imageVector = Icons.Filled.Add, contentDescription = "Add Ingredient")
+                }
             }
-        }
+        )
 
         // Title
         Box(

@@ -84,19 +84,11 @@ fun LikedRecipePage(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         // Üst bölüm: Geri butonu ve sayfa başlığı
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            if (backActive) {
-                BackButton(onBackClick)
-            }
-            Text(
-                text = "Liked Recipes",
-                style = MaterialTheme.typography.titleLarge
-            )
-        }
+        ScreenHeader(
+            title = "Liked Recipes",
+            onNavigateBack = onBackClick
+        )
+
         // Arama Çubuğu
         OutlinedTextField(
             value = searchQuery,

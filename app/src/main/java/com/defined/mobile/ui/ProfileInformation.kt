@@ -24,72 +24,52 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import com.defined.mobile.ui.theme.*
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileInformation(viewModel: LoginViewModel, onNavigateBack: () -> Unit) {
-    val currentUser = viewModel.currentUser();
+    val currentUser = viewModel.currentUser()
 
     var name by rememberSaveable { mutableStateOf(currentUser?.displayName) }
-//    var birthday by rememberSaveable { mutableStateOf("Birthday") }
     var phoneNumber by rememberSaveable { mutableStateOf(currentUser?.phoneNumber) }
     var email by rememberSaveable { mutableStateOf(currentUser?.email) }
-//    var password by rememberSaveable { mutableStateOf("Password") }
 
-    Scaffold(
-        containerColor = TransparentColor,
-        topBar = {
-            TopAppBar(
-                title = { Text(text = "Profile Information", color = MaterialTheme.colorScheme.onSecondary) },
-                navigationIcon = {
-                    BackButton(onNavigateBack)
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = TransparentColor, // Remove default background
-                    titleContentColor = MaterialTheme.colorScheme.onPrimary, // Adjust text color
-                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimary // Adjust icon color
-                )
-            )
-        }
-    ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+    ) {
+        ScreenHeader(
+            title = "Profile Information",
+            onNavigateBack = onNavigateBack
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Box(
+            modifier = Modifier.fillMaxWidth(),
+            contentAlignment = Alignment.Center
         ) {
-            Box(
-                modifier = Modifier.fillMaxWidth(),
-                contentAlignment = Alignment.Center
-            ) {
-                name?.let {
-                    Text(
-                        text = it,
-                        color = MaterialTheme.colorScheme.onSecondary,
-                        fontSize = fontLarge
-                    )
-                }
+            name?.let {
+                Text(
+                    text = it,
+                    color = MaterialTheme.colorScheme.onSecondary,
+                    fontSize = fontLarge
+                )
             }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Information rows
-            Column(modifier = Modifier.padding(horizontal = 16.dp)) {
-//                ProfileInfoRow(Icons.Default.DateRange, "Birthday", birthday, onValueChange = { birthday = it })
-                phoneNumber?.let { it ->
-                    ProfileInfoRow(Icons.Default.Phone, "Phone Number",
-                        it, onValueChange = { phoneNumber = it })
-                }
-                email?.let {
-                    ProfileInfoRow(Icons.Default.Email, "Email",
-                        it, onValueChange = { email = it })
-                }
-//                 ProfileInfoRow(Icons.Default.Lock, "Password", password, onValueChange = { password = it })
-            }
-
-            Spacer(modifier = Modifier.weight(1f))
-
-            // Bottom button with gradient
-//            EditButton(onClick = onSave)
         }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Column {
+            phoneNumber?.let {
+                ProfileInfoRow(Icons.Default.Phone, "Phone Number", it, onValueChange = { phoneNumber = it })
+            }
+            email?.let {
+                ProfileInfoRow(Icons.Default.Email, "Email", it, onValueChange = { email = it })
+            }
+        }
+
+        Spacer(modifier = Modifier.weight(1f))
+
     }
 }
 
