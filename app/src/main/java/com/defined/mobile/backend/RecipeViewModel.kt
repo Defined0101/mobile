@@ -104,17 +104,6 @@ class RecipeViewModel : ViewModel() {
         }
     }
 
-    fun fetchSurpriseRecipeId(userId: String) {
-        viewModelScope.launch {
-            try {
-                val response = RetrofitClient.apiService.getSurpriseRecipeId(userId)
-                _surpriseRecipe.value = response
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-        }
-    }
-
     fun fetchRecipeCard(recipeId: Int, fields: List<String>) {
         viewModelScope.launch {
             try {

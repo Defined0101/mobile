@@ -232,7 +232,8 @@ fun AppNavigation(
                     userId = user.uid,
                     navController = navController,
                     onBackClick = { navController.popBackStack() },
-                    savedRecipeViewModel = savedRecipeViewModel
+                    savedRecipeViewModel = savedRecipeViewModel,
+                    backActive = backActive
                 )
             } ?: run {
                 navController.navigate("login") {

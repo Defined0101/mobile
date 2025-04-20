@@ -19,6 +19,7 @@ fun SavedRecipePage(
     navController: NavController,
     onBackClick: () -> Unit,
     savedRecipeViewModel: SavedRecipeViewModel,
+    backActive: Boolean = false
 ) {
     // 1) Collect the live list of saved recipes
     val savedRecipes by savedRecipeViewModel.savedRecipes.collectAsState()
