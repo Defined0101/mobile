@@ -161,6 +161,7 @@ fun AppNavigation(
                 recipeViewModel = recipeViewModel,
                 categoryViewModel = categoryViewModel,
                 shoppingListViewModel = shoppingListViewModel,
+                loginViewModel = loginViewModel,
                 navController = navController,
                 onSearchClick = { navController.navigate("search/true/_") }
             )

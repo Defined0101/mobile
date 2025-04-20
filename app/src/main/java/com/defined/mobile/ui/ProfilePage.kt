@@ -34,9 +34,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import com.defined.mobile.R
 import com.defined.mobile.ui.theme.*
 
 // Profile screen with a column of custom buttons
@@ -71,7 +76,7 @@ fun ProfileScreen(navController: NavHostController, viewModel: LoginViewModel) {
         )
         CustomButtonWithIconAndTriangle(
             text = "Saved Recipes",
-            icon = Icons.Default.Star, // was ThumbUp
+            icon = Icons.Default.Bookmark, // was ThumbUp
             onClick = { navController.navigate("savedRecipes/true") }
         )
         CustomButtonWithIconAndTriangle(
@@ -86,7 +91,7 @@ fun ProfileScreen(navController: NavHostController, viewModel: LoginViewModel) {
         )
         CustomButtonWithIconAndTriangle(
             text = "Shopping List",
-            icon = Icons.Default.ThumbDown,
+            icon = painterResource(id = R.drawable.ic_shopping_cart),
             onClick = { navController.navigate("shoppingListPage") }
         )
         CustomButtonWithIconAndTriangle(
@@ -100,12 +105,10 @@ fun ProfileScreen(navController: NavHostController, viewModel: LoginViewModel) {
             }
         )
     }
-
-
 }
 
 @Composable
-fun CustomButtonWithIconAndTriangle(text: String, icon: ImageVector, onClick: () -> Unit) {
+fun CustomButtonWithIconAndTriangle(text: String, icon: Painter, onClick: () -> Unit) {
     val blueColor = MaterialTheme.colorScheme.primary
 
     Row(
@@ -128,7 +131,7 @@ fun CustomButtonWithIconAndTriangle(text: String, icon: ImageVector, onClick: ()
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
-                imageVector = icon,
+                painter = icon,
                 contentDescription = "$text Icon",
                 tint = MaterialTheme.colorScheme.onPrimary,
                 modifier = Modifier.size(24.dp)
@@ -143,6 +146,19 @@ fun CustomButtonWithIconAndTriangle(text: String, icon: ImageVector, onClick: ()
         // Triangle icon on the right
         TriangleIcon(theColor = blueColor)
     }
+}
+
+@Composable
+fun CustomButtonWithIconAndTriangle(
+    text: String,
+    icon: ImageVector,
+    onClick: () -> Unit
+) {
+    CustomButtonWithIconAndTriangle(
+        text   = text,
+        icon   = rememberVectorPainter(icon),
+        onClick = onClick
+    )
 }
 
 @Composable
