@@ -13,7 +13,7 @@ class PreferencesViewModel : ViewModel() {
     val preferences: StateFlow<List<String>> = _preferences
 
     init {
-        //fetchPreferences()
+        fetchPreferences()
     }
 
     private fun fetchPreferences(forceRefresh: Boolean = false) {

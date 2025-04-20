@@ -107,7 +107,8 @@ fun IngredientCard(
     isAvailable: Boolean,
     modifier: Modifier = Modifier,
     text: String = "empty",
-    isInShoppingList: Boolean = false
+    isInShoppingList: Boolean = false,
+    onDeleteClick: () -> Unit = {}
 ) {
     val backgroundColor = if (isAvailable)
         availableColor
@@ -126,10 +127,10 @@ fun IngredientCard(
         shape = MaterialTheme.shapes.medium,
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
-        val qty = ingredient.quantity?.let {
-            if (it == kotlin.math.round(it)) it.toInt().toString() else it.toString()
-        } ?: ""
-        val content = if (text != "empty") "• $text" else "• $qty ${ingredient.unit.orEmpty()} of ${ingredient.name}"
+        val qty = ingredient.quantity.let {
+            if (it == round(it)) it.toInt().toString() else it.toString()
+        }
+        val content = if (text != "empty") "• $text" else "• $qty ${ingredient.unit} of ${ingredient.name}"
 
         Row(
             modifier = Modifier
@@ -144,13 +145,17 @@ fun IngredientCard(
                 color = contentColor,
                 modifier = Modifier.weight(1f)
             )
-            if (isInShoppingList)
+            if (isInShoppingList) {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_shopping_cart),
                     contentDescription = "Add to shopping list",
                     tint = contentColor,
                     modifier = Modifier.size(20.dp)
                 )
+                DeleteButton(
+                    onClick = onDeleteClick
+                )
+            }
         }
     }
 }
@@ -480,7 +485,7 @@ fun RecipePage(
                     label = recipe.TotalTime.toString(),
                     modifier = Modifier.weight(1f)
                 )
-                val calories = if (recipe.Calories == recipe.Calories.let { round(it) }) recipe.Calories.toInt() else recipe.Calories
+                val calories = if (recipe.Calories == round(recipe.Calories)) recipe.Calories.toInt() else recipe.Calories
                 InfoBadge(
                     icon = Lucide.Zap,
                     label = calories.toString(),
@@ -505,7 +510,7 @@ fun RecipePage(
                             ingredient.available = Random.nextBoolean()
                             IngredientCard(
                                 ingredient = ingredient,
-                                isAvailable = ingredient.available!!
+                                isAvailable = ingredient.available
                             )
                         }
                     }

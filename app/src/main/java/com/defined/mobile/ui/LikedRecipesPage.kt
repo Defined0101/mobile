@@ -9,6 +9,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.defined.mobile.backend.DislikedRecipeViewModel
 import com.defined.mobile.backend.LikedRecipeViewModel
 import com.defined.mobile.backend.RecipeViewModel
 import com.defined.mobile.entities.Recipe
@@ -18,13 +19,14 @@ import com.defined.mobile.ui.theme.StyledButton
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LikedRecipePage(
+    userId: String,
     navController: NavController,
     backActive: Boolean,
     onBackClick: () -> Unit,
-    viewModel: RecipeViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+    likedRecipeViewModel: LikedRecipeViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
-    // Tüm tarifler (liked tariflerin listesi; örneğin backend'den gelen liste içerisinde filtre uygulayabilirsiniz)
-    val recipesVal by viewModel.recipes.collectAsState()
+    // Tüm tarifler (disliked tariflerin listesi; örneğin backend'den gelen liste içerisinde filtre uygulayabilirsiniz)
+    val recipesVal by likedRecipeViewModel.likedRecipes.collectAsState()
 
     // SearchScreen ile uyumlu filtre ve sıralama state’leri:
     var searchQuery by remember { mutableStateOf("") }
@@ -72,6 +74,10 @@ fun LikedRecipePage(
         }
     }
 
+    LaunchedEffect(userId) {
+        likedRecipeViewModel.fetchLikedRecipes(userId)
+    }
+
     Column(
         modifier = Modifier.fillMaxSize().padding(16.dp),
         verticalArrangement = Arrangement.Top,
@@ -86,7 +92,10 @@ fun LikedRecipePage(
             if (backActive) {
                 BackButton(onBackClick)
             }
-            Text(text = "Liked Recipes", style = MaterialTheme.typography.titleLarge)
+            Text(
+                text = "Liked Recipes",
+                style = MaterialTheme.typography.titleLarge
+            )
         }
         // Arama Çubuğu
         OutlinedTextField(
@@ -123,11 +132,11 @@ fun LikedRecipePage(
             itemsIndexed(displayedRecipes) { _, recipe ->
                 RecipeItem(
                     recipe = recipe,
-                    onClick = { navController.navigate("recipePage/${recipe.ID}") }
+                    onClick = { navController.navigate("recipePage/${recipe.ID}") },
+                    deleteActive = true,
+                    deleteOnClick = { likedRecipeViewModel.removeLikedRecipe(userId, recipe) }
                 )
             }
         }
     }
 }
-
-

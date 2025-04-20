@@ -81,7 +81,8 @@ fun ShoppingListPage(
                         ingredient = ingredient,
                         isAvailable = false,
                         text = ingredient.name,
-                        isInShoppingList = true
+                        isInShoppingList = true,
+                        onDeleteClick = { shoppingListViewModel.removeIngredient(ingredient) }
                     )
                 }
             }

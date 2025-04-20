@@ -20,6 +20,9 @@ fun IngredientSearch(
     onNavigateBack: () -> Unit // Callback for back navigation
 ) {
     var searchQuery by remember { mutableStateOf("") }
+
+    // TODO: Fetch all ingredients from backend and do not display all of them on the same page.
+    // Display top n ingredients
     val allIngredients = listOf(
         Ingredient("Peanuts", "gram","gram", 50f),
         Ingredient("Shellfish","pint","pint", 50f),

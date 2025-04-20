@@ -9,127 +9,120 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.defined.mobile.backend.RecipeViewModel
 import com.defined.mobile.backend.SavedRecipeViewModel
-import com.defined.mobile.entities.Recipe
 import com.defined.mobile.ui.theme.BackButton
-import com.defined.mobile.ui.theme.StyledButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SavedRecipePage(
     userId: String,
-    navController: NavController, onBackClick: () -> Unit,
+    navController: NavController,
+    onBackClick: () -> Unit,
     savedRecipeViewModel: SavedRecipeViewModel,
 ) {
-    // Updated list of recipes with preparation time
-    //val savedRecipesVal by viewModel.recipes.collectAsState()
-    val savedRecipesVal by savedRecipeViewModel.savedRecipes.collectAsState()
+    // 1) Collect the live list of saved recipes
+    val savedRecipes by savedRecipeViewModel.savedRecipes.collectAsState()
 
-    var savedRecipes = savedRecipesVal
-    var isModified by remember { mutableStateOf(false) }
-
-    // SearchScreen ile uyumlu filtre ve sıralama state’leri:
+    // 2) Search / filter / sort state
     var searchQuery by remember { mutableStateOf("") }
     var isFilterPopupVisible by remember { mutableStateOf(false) }
     var selectedSortOption by remember { mutableStateOf("None") }
     val sortOptions = listOf("None", "Preparation Time (Ascending)", "Preparation Time (Descending)")
 
-    // Çoklu kategori seçimi için state (SearchScreen ile aynı)
     val selectedCategories = remember { mutableStateListOf<String>() }
-    // Çoklu preference seçimi için state (SearchScreen ile aynı)
     val selectedPreferences = remember { mutableStateListOf<String>() }
 
     fun toggleCategory(cat: String) {
-        if (selectedCategories.contains(cat)) selectedCategories.remove(cat) else selectedCategories.add(cat)
+        if (selectedCategories.contains(cat)) selectedCategories.remove(cat)
+        else selectedCategories.add(cat)
     }
     fun togglePreference(pref: String) {
-        if (selectedPreferences.contains(pref)) selectedPreferences.remove(pref) else selectedPreferences.add(pref)
+        if (selectedPreferences.contains(pref)) selectedPreferences.remove(pref)
+        else selectedPreferences.add(pref)
     }
     fun clearFilters() {
         selectedCategories.clear()
         selectedPreferences.clear()
     }
 
-    // Lokal filtreleme & sıralama SearchScreen ile aynı mantıkta:
-    val displayedRecipes = remember(
-        recipesVal,
+    // 3) Filter & sort in one go
+    val displayedRecipes by remember(
+        savedRecipes,
         searchQuery,
         selectedCategories.toList(),
         selectedPreferences.toList(),
         selectedSortOption
     ) {
-        recipesVal.filter { recipe ->
-            // Arama filtresi: boşsa veya tarif ismi içeriyorsa
-            (searchQuery.isEmpty() || recipe.Name.contains(searchQuery, ignoreCase = true)) &&
-                    // Kategori filtresi: seçili kategori varsa tarifin kategorisi listede yer almalı
-                    (selectedCategories.isEmpty() || selectedCategories.contains(recipe.Category)) &&
-                    // Preference filtresi: seçili tüm tercihler tarifin etiketlerinde yer almalı
-                    (selectedPreferences.isEmpty() || selectedPreferences.all { pref -> recipe.Label.contains(pref) })
-        }.let { list ->
-            when (selectedSortOption) {
-                "Preparation Time (Ascending)" -> list.sortedBy { it.TotalTime }
-                "Preparation Time (Descending)" -> list.sortedByDescending { it.TotalTime }
-                else -> list.sortedBy { it.ID }
-            }
+        derivedStateOf {
+            savedRecipes
+                .filter { recipe ->
+                    // search
+                    (searchQuery.isEmpty() || recipe.Name.contains(searchQuery, ignoreCase = true)) &&
+                            // category
+                            (selectedCategories.isEmpty() || selectedCategories.contains(recipe.Category)) &&
+                            // preferences
+                            (selectedPreferences.isEmpty() || selectedPreferences.all { pref ->
+                                recipe.Label.contains(pref)
+                            })
+                }
+                .let { list ->
+                    when (selectedSortOption) {
+                        "Preparation Time (Ascending)" -> list.sortedBy { it.TotalTime }
+                        "Preparation Time (Descending)" -> list.sortedByDescending { it.TotalTime }
+                        else -> list
+                    }
+                }
         }
     }
 
-    // Function to apply sort
-    fun applySort(recipes: List<Recipe>): List<Recipe> {
-        return when (selectedSortOption) {
-            "Preparation Time (Ascending)" -> recipes.sortedBy { it.TotalTime }
-            "Preparation Time (Descending)" -> recipes.sortedByDescending { it.TotalTime }
-            else -> recipes
-        }
-    }
-
-    // Function to update filtered and sorted list
-    fun updateFilteredRecipes() {
-        val filtered = applyFilters(savedRecipes)
-        filteredRecipes = applySort(filtered)
-    }
-
-    // Fetch liked recipes on userId change
+    // 4) Load saved recipes whenever the userId changes
     LaunchedEffect(userId) {
         savedRecipeViewModel.fetchSavedRecipes(userId)
     }
 
+    // --- UI ---
     Column(
-        modifier = Modifier.fillMaxSize().padding(16.dp),
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Üst bölüm: Geri butonu ve sayfa başlığı
+        // Header with back button
         Row(
-            modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            if (backActive) {
-                BackButton(onBackClick)
-            }
+            BackButton(onBackClick)
             Text(
                 text = "Saved Recipes",
                 style = MaterialTheme.typography.titleLarge
             )
         }
-        // Arama Çubuğu
+
+        // Search bar
         OutlinedTextField(
             value = searchQuery,
             onValueChange = { searchQuery = it },
             placeholder = { Text("Search...") },
-            modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp),
             colors = TextFieldDefaults.outlinedTextFieldColors()
         )
-        // Filter ve Sort Row: SearchScreen ile aynı
+
+        // Filter & Sort Row
         FilterAndSortRow(
             selectedSortOption = selectedSortOption,
             onSortSelected = { selectedSortOption = it },
             sortOptions = sortOptions,
             onFilterClick = { isFilterPopupVisible = true }
         )
-        // Filter Popup: SearchScreen ile uyumlu (örnek kategori & preference listeleri kullanılıyor; dilersen ViewModel verisi ile değiştirebilirsin)
+
+        // Filter Popup
         FilterPopup(
             isVisible = isFilterPopupVisible,
             onDismiss = { isFilterPopupVisible = false },
@@ -141,7 +134,8 @@ fun SavedRecipePage(
             selectedPreferences = selectedPreferences,
             onPreferenceToggle = { togglePreference(it) }
         )
-        // Tarif listesi (filtrelenmiş ve sıralanmış)
+
+        // List of recipes
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -149,7 +143,9 @@ fun SavedRecipePage(
             itemsIndexed(displayedRecipes) { _, recipe ->
                 RecipeItem(
                     recipe = recipe,
-                    onClick = { navController.navigate("recipePage/${recipe.ID}") }
+                    onClick = { navController.navigate("recipePage/${recipe.ID}") },
+                    deleteActive = true,
+                    deleteOnClick = { savedRecipeViewModel.removeSavedRecipe(userId, recipe) }
                 )
             }
         }

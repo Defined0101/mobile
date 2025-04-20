@@ -9,6 +9,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.defined.mobile.backend.DislikedRecipeViewModel
 import com.defined.mobile.backend.RecipeViewModel
 import com.defined.mobile.entities.Recipe
 import com.defined.mobile.ui.theme.BackButton
@@ -17,13 +18,14 @@ import com.defined.mobile.ui.theme.StyledButton
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DislikedRecipePage(
+    userId: String,
     navController: NavController,
     backActive: Boolean,
     onBackClick: () -> Unit,
-    viewModel: RecipeViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+    dislikedRecipeViewModel: DislikedRecipeViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
     // Tüm tarifler (disliked tariflerin listesi; örneğin backend'den gelen liste içerisinde filtre uygulayabilirsiniz)
-    val recipesVal by viewModel.recipes.collectAsState()
+    val recipesVal by dislikedRecipeViewModel.dislikedRecipes.collectAsState()
 
     // SearchScreen ile uyumlu filtre ve sıralama state’leri:
     var searchQuery by remember { mutableStateOf("") }
@@ -69,6 +71,10 @@ fun DislikedRecipePage(
                 else -> list.sortedBy { it.ID }
             }
         }
+    }
+
+    LaunchedEffect(userId) {
+        dislikedRecipeViewModel.fetchDislikedRecipes(userId)
     }
 
     Column(
@@ -125,7 +131,9 @@ fun DislikedRecipePage(
             itemsIndexed(displayedRecipes) { _, recipe ->
                 RecipeItem(
                     recipe = recipe,
-                    onClick = { navController.navigate("recipePage/${recipe.ID}") }
+                    onClick = { navController.navigate("recipePage/${recipe.ID}") },
+                    deleteActive = true,
+                    deleteOnClick = { dislikedRecipeViewModel.removeDislikedRecipe(userId, recipe) }
                 )
             }
         }

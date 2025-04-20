@@ -15,6 +15,12 @@ class ShoppingListViewModel : ViewModel() {
         }
     }
 
+    fun removeIngredient(ingredient: Ingredient) {
+        _shoppingList.value = _shoppingList.value
+            .toMutableList()
+            .apply { remove(ingredient) }
+    }
+
     fun clearList() {
         _shoppingList.value = emptyList()
     }
