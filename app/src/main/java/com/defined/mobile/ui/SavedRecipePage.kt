@@ -82,21 +82,19 @@ fun SavedRecipePage(
 
     // --- UI ---
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
+        modifier = Modifier.fillMaxSize().padding(16.dp),
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         // Header with back button
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp),
+            modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            BackButton(onBackClick)
+            if (backActive) {
+                BackButton(onBackClick)
+            }
             Text(
                 text = "Saved Recipes",
                 style = MaterialTheme.typography.titleLarge
@@ -108,9 +106,7 @@ fun SavedRecipePage(
             value = searchQuery,
             onValueChange = { searchQuery = it },
             placeholder = { Text("Search...") },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp),
+            modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
             colors = TextFieldDefaults.outlinedTextFieldColors()
         )
 
