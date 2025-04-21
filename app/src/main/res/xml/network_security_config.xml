@@ -2,9 +2,8 @@
 <network-security-config>
     <domain-config cleartextTrafficPermitted="true">
         <domain includeSubdomains="true">10.0.2.2</domain> <!-- Emülatör içindeki host -->
-        <domain includeSubdomains="true">10.3.192.222</domain> <!-- Gerçek IP'niz -->
+        <!-- <domain includeSubdomains="true">10.3.192.222</domain> --> <!-- Gerçek IP'niz -->
 
-        <!-- <domain includeSubdomains="true">10.0.2.2</domain> -->
-        <!-- <domain includeSubdomains="true">localhost</domain> --> <!-- Gerçek IP'niz --> -->
+        <domain includeSubdomains="true">localhost</domain>  <!-- Gerçek IP'niz --> -->
     </domain-config>
 </network-security-config>

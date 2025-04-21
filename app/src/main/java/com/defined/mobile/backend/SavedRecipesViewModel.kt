@@ -34,7 +34,7 @@ class SavedRecipeViewModel : ViewModel() {
 
             viewModelScope.launch {
                 try {
-                    RetrofitClient.apiService.saveRecipe(userId, recipe)
+                    RetrofitClient.apiService.saveRecipe(userId, recipe.ID)
                 } catch (e: Exception) {
                     e.printStackTrace()
                 }

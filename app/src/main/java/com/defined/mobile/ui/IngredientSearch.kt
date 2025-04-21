@@ -42,19 +42,10 @@ fun IngredientSearch(
             .padding(16.dp)
     ) {
         // Top Bar
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            BackButton(onNavigateBack)
-            Text(
-                text = "Search Ingredients",
-                style = MaterialTheme.typography.titleLarge
-            )
-        }
+        ScreenHeader(
+            title = "Search Ingredients",
+            onNavigateBack = onNavigateBack
+        )
 
         // Search Bar
         OutlinedTextField(

@@ -34,7 +34,7 @@ class DislikedRecipeViewModel : ViewModel() {
 
             viewModelScope.launch {
                 try {
-                    RetrofitClient.apiService.dislikeRecipe(userId, recipe)
+                    RetrofitClient.apiService.dislikeRecipe(userId, recipe.ID)
                 } catch (e: Exception) {
                     e.printStackTrace()
                 }

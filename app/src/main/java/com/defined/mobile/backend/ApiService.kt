@@ -69,7 +69,7 @@ interface ApiService {
     @POST("likeRecipe")
     suspend fun likeRecipe(
         @Query("user_id") userId: String,
-        @Body recipe: Recipe
+        @Query("recipe_id") recipeId: Int
     )
 
     @DELETE("unlikeRecipe")
@@ -84,7 +84,7 @@ interface ApiService {
     @POST("saveRecipe")
     suspend fun saveRecipe(
         @Query("user_id") userId: String,
-        @Body recipe: Recipe
+        @Query("recipe_id") recipeId: Int
     )
 
     @DELETE("unsaveRecipe")
@@ -99,7 +99,7 @@ interface ApiService {
     @POST("dislikeRecipe")
     suspend fun dislikeRecipe(
         @Query("user_id") userId: String,
-        @Body recipe: Recipe
+        @Query("recipe_id") recipeId: Int
     )
 
     @DELETE("unDislikeRecipe")
