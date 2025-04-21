@@ -35,21 +35,10 @@ fun ShoppingListPage(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         // Üst bölüm: Geri butonu ve sayfa başlığı
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            if (backActive) {
-                BackButton(onBackClick)
-            }
-            Text(
-                text = "Shopping List",
-                style = MaterialTheme.typography.titleLarge
-            )
-        }
+        ScreenHeader(
+            title = "Shopping List",
+            onNavigateBack = onBackClick
+        )
 
         // Boşluk veya ayraç eklemek istersen:
         Spacer(modifier = Modifier.height(8.dp))
@@ -82,7 +71,8 @@ fun ShoppingListPage(
                         isAvailable = false,
                         text = ingredient.name,
                         isInShoppingList = true,
-                        onDeleteClick = { shoppingListViewModel.removeIngredient(ingredient) }
+                        onDeleteClick = { shoppingListViewModel.removeIngredient(ingredient) },
+                        shoppingListViewModel = shoppingListViewModel
                     )
                 }
             }

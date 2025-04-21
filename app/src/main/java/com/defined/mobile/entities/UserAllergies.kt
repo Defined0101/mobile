@@ -1,6 +1,8 @@
 package com.defined.mobile.entities
 
+import com.google.gson.annotations.SerializedName
+
 data class UserAllergies(
-    val userId: String,
+    @SerializedName("user_id") val userId: String,
     val allergies: List<String>
 )

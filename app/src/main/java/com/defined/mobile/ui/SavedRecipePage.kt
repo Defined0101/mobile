@@ -87,20 +87,10 @@ fun SavedRecipePage(
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Header with back button
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            if (backActive) {
-                BackButton(onBackClick)
-            }
-            Text(
-                text = "Saved Recipes",
-                style = MaterialTheme.typography.titleLarge
-            )
-        }
+        ScreenHeader(
+            title = "Saved Recipes",
+            onNavigateBack = onBackClick
+        )
 
         // Search bar
         OutlinedTextField(

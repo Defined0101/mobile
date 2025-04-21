@@ -28,6 +28,7 @@ import com.defined.mobile.ui.theme.*
 fun MainPage(recipeViewModel: RecipeViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
              categoryViewModel: CategoryViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
              shoppingListViewModel: ShoppingListViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
+             loginViewModel: LoginViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
              navController: NavController,
              onSearchClick: () -> Unit
 ) {
@@ -39,7 +40,7 @@ fun MainPage(recipeViewModel: RecipeViewModel = androidx.lifecycle.viewmodel.com
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         TopBar(onSearchClick)
-        SurpriseMeButton(recipeViewModel = recipeViewModel, navController = navController)
+        loginViewModel.currentUser()?.let { SurpriseMeButton(recipeViewModel = recipeViewModel, navController = navController, userId = it.uid) }
         // FeaturedImage()
         CategorySection(viewModel = categoryViewModel, navController = navController)
         RecipeSection(navController, recipeViewModel)
@@ -49,19 +50,26 @@ fun MainPage(recipeViewModel: RecipeViewModel = androidx.lifecycle.viewmodel.com
 @Composable
 fun SurpriseMeButton(
     recipeViewModel: RecipeViewModel,
-    navController: NavController
+    navController: NavController,
+    userId: String
 ) {
-    val surpriseRecipeId by recipeViewModel.surpriseRecipe.collectAsState(initial = 0)
+    val surpriseRecipeId by recipeViewModel
+        .surpriseRecipe
+        .collectAsState(initial = 0)
 
     Button(
         onClick = {
-            surpriseRecipeId?.let { id ->
-                navController.navigate("recipePage/$id")
-            }
+            recipeViewModel.fetchSurpriseRecipeId(userId)
         },
         modifier = Modifier.fillMaxWidth()
     ) {
         Text("Surprise Me")
+    }
+
+    LaunchedEffect(surpriseRecipeId) {
+        if (surpriseRecipeId != 0) {
+            navController.navigate("recipePage/$surpriseRecipeId")
+        }
     }
 }
 

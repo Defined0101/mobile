@@ -108,7 +108,8 @@ fun IngredientCard(
     modifier: Modifier = Modifier,
     text: String = "empty",
     isInShoppingList: Boolean = false,
-    onDeleteClick: () -> Unit = {}
+    onDeleteClick: () -> Unit = {},
+    shoppingListViewModel: ShoppingListViewModel
 ) {
     val backgroundColor = if (isAvailable)
         availableColor
@@ -146,14 +147,19 @@ fun IngredientCard(
                 modifier = Modifier.weight(1f)
             )
             if (isInShoppingList) {
+                DeleteButton(
+                    onClick = onDeleteClick
+                )
+            } else if (!isAvailable) {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_shopping_cart),
                     contentDescription = "Add to shopping list",
                     tint = contentColor,
-                    modifier = Modifier.size(20.dp)
-                )
-                DeleteButton(
-                    onClick = onDeleteClick
+                    modifier = Modifier
+                        .size(20.dp)
+                        .clickable {
+                            shoppingListViewModel.addIngredients(listOf(ingredient))
+                        },
                 )
             }
         }
@@ -451,7 +457,7 @@ fun RecipePage(
                     )
                 }
                 // Dietary preferences are shown if the filtered list is not empty.
-                val filteredPreferences = filterDietPreferences(recipe.Label) // recipe.dietPreferences
+                val filteredPreferences = refactorDietPreferences(filterDietPreferences(recipe.Label)) // recipe.dietPreferences
                 if (filteredPreferences.isNotEmpty()) {
                     Row(
                         modifier = Modifier
@@ -510,7 +516,8 @@ fun RecipePage(
                             ingredient.available = Random.nextBoolean()
                             IngredientCard(
                                 ingredient = ingredient,
-                                isAvailable = ingredient.available
+                                isAvailable = ingredient.available,
+                                shoppingListViewModel = shoppingListViewModel
                             )
                         }
                     }
