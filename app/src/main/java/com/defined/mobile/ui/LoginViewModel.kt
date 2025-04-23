@@ -219,7 +219,7 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
             .document(uid)
             .get()
             .addOnSuccessListener { document ->
-                val intID = document.getLong("int_id")?.toString()
+                val intID = document.getString("int_id") //document.getLong("int_id")?.toString()
                 onResult(intID)
             }
             .addOnFailureListener { e ->

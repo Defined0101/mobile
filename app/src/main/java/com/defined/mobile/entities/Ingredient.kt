@@ -3,9 +3,9 @@ package com.defined.mobile.entities
 import com.google.gson.annotations.SerializedName
 
 data class Ingredient(
-    @SerializedName("name") val name: String,
-    @SerializedName("default_unit") val default_unit: String = "",
-    @SerializedName("unit") val unit: String,
+    @SerializedName("ingr_name") val name: String,
+    @SerializedName("default_unit") val default_unit: String = "piece",
+    @SerializedName("unit") val unit: String = "piece",
     @SerializedName("quantity") val quantity: Float,
     @SerializedName("available") var available: Boolean = false
 )

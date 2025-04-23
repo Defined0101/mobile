@@ -32,15 +32,18 @@ class RecipeViewModel : ViewModel() {
 
     private val repository = RecipeRepository(RetrofitClient.apiService)
 
+    /*
     init {
         fetchRecipes()
         print(recipes)
     }
+     */
 
-    private fun fetchRecipes(forceRefresh: Boolean = false) {
+    fun fetchRecipes(userId: String, forceRefresh: Boolean = false) {
         viewModelScope.launch {
             try {
-                val recipesList = repository.getRecipes(forceRefresh)
+                val recipesList = repository.getRecipes(userId, forceRefresh)
+                println("recipesList: " + recipesList)
                 _recipes.value = recipesList
             } catch (e: Exception) {
                 e.printStackTrace()

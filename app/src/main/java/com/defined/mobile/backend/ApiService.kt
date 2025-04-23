@@ -16,7 +16,7 @@ interface ApiService {
     suspend fun getCategories(): List<String>
 
     @GET("getUserRecommendations")
-    suspend fun getUserRecommendations(): List<Recipe>
+    suspend fun getUserRecommendations(@Query("user_id") userId: String): List<Recipe>
 
     @GET("getRecipeDetails")
     suspend fun getRecipeDetails(@Query("recipe_id") recipeId: Int): Recipe

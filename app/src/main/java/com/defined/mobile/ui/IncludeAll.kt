@@ -133,10 +133,27 @@ fun AppNavigation(
 
     val currentUser = loginViewModel.currentUser()
 
+    var intId by remember { mutableStateOf<String?>(null) }
+
     if (currentUser != null) {
         println("${currentUser.displayName} already logged in.")
         println("${currentUser.email} already logged in.")
+
+        loginViewModel.getIntID { id ->
+            println("intId: $intId")
+            intId = id
+        }
+
+        intId?.let { userId ->
+            // Now that we have the internal user ID, fetch the recipes
+            LaunchedEffect(userId) {
+                println("userId: $userId")
+                recipeViewModel.fetchRecipes(userId)
+            }
+        }
     }
+
+
 
     val startDestination = if (currentUser != null) "main" else "login"
 
@@ -195,14 +212,25 @@ fun AppNavigation(
                 onNavigateBack = { navController.popBackStack() }
             )
         }
-        composable("preferences") { backStackEntry ->
-            currentUser?.let { user ->
-                // Pass userId from currentUser to Preferences
-                Preferences(userId = user.uid, onNavigateBack = { navController.popBackStack() })
-            } ?: run {
-                // Handle case when currentUser is null, maybe redirect to login
+        composable("preferences") {
+            var intId by remember { mutableStateOf<String?>(null) }
+
+            if (currentUser == null) {
                 navController.navigate("login") {
-                    popUpTo("login") { inclusive = true } // Clear the back stack if user isn't logged in
+                    popUpTo("login") { inclusive = true }
+                }
+            } else {
+                LaunchedEffect(Unit) {
+                    loginViewModel.getIntID { id ->
+                        intId = id
+                    }
+                }
+
+                intId?.let { userId ->
+                    Preferences(
+                        userId = userId,
+                        onNavigateBack = { navController.popBackStack() }
+                    )
                 }
             }
         }
@@ -230,99 +258,141 @@ fun AppNavigation(
                 }
             }
         }
+        composable("ingredients") {
+            var userId by remember { mutableStateOf<String?>(null) }
 
+            if (currentUser == null) {
+                // Navigate to login if there is no user
+                navController.navigate("login") {
+                    popUpTo("login") { inclusive = true }
+                }
+            } else {
+                // Only call this once
+                LaunchedEffect(Unit) {
+                    loginViewModel.getIntID { id ->
+                        userId = id
+                    }
+                }
+
+                userId?.let { id ->
+                    InventoryPage(
+                        navController = navController,
+                        userId = id, // Pass the userId here
+                        onNavigateBack = { navController.popBackStack() },
+                        userIngredientsViewModel = userIngredientsViewModel
+                    )
+                }
+            }
+        }
         composable("ingredientSearch") {
             IngredientSearch(
                 navController = navController,
                 onNavigateBack = { navController.popBackStack() }
             )
         }
+
         composable("savedRecipes/{backActive}") { backStackEntry ->
-            currentUser?.let { user ->
-                //println("user.uid: " + user.uid)
-                val backActive = backStackEntry.arguments?.getString("backActive")?.toBoolean() ?: false
-                SavedRecipePage(
-                    userId = user.uid,
-                    navController = navController,
-                    onBackClick = { navController.popBackStack() },
-                    savedRecipeViewModel = savedRecipeViewModel,
-                    backActive = backActive
-                )
-            } ?: run {
+            var intId by remember { mutableStateOf<String?>(null) }
+            val backActive = backStackEntry.arguments?.getString("backActive")?.toBoolean() ?: false
+
+            if (currentUser == null) {
                 navController.navigate("login") {
                     popUpTo("login") { inclusive = true }
+                }
+            } else {
+                LaunchedEffect(Unit) {
+                    loginViewModel.getIntID { id ->
+                        intId = id
+                    }
+                }
+
+                intId?.let { userId ->
+                    SavedRecipePage(
+                        userId = userId,
+                        navController = navController,
+                        onBackClick = { navController.popBackStack() },
+                        savedRecipeViewModel = savedRecipeViewModel,
+                        backActive = backActive
+                    )
                 }
             }
         }
         composable("recipePage/{recipeId}") { backStackEntry ->
+            var intId by remember { mutableStateOf<String?>(null) }
             val recipeId = backStackEntry.arguments?.getString("recipeId")?.toIntOrNull() ?: 0
 
-            currentUser?.let { user ->
-                //println("user.uid: " + user.uid)
-                RecipePage(
-                    userId = user.uid,
-                    recipeId = recipeId,
-                    onBackClick = { navController.popBackStack() },
-                    likedRecipeViewModel = likedRecipeViewModel,
-                    savedRecipeViewModel = savedRecipeViewModel,
-                    dislikedRecipeViewModel = dislikedRecipeViewModel,
-                    shoppingListViewModel = shoppingListViewModel
-                )
-            } ?: run {
+            if (currentUser == null) {
                 navController.navigate("login") {
                     popUpTo("login") { inclusive = true }
+                }
+            } else {
+                LaunchedEffect(Unit) {
+                    loginViewModel.getIntID { id ->
+                        intId = id
+                    }
+                }
+
+                intId?.let { userId ->
+                    RecipePage(
+                        userId = userId,
+                        recipeId = recipeId,
+                        onBackClick = { navController.popBackStack() },
+                        likedRecipeViewModel = likedRecipeViewModel,
+                        savedRecipeViewModel = savedRecipeViewModel,
+                        dislikedRecipeViewModel = dislikedRecipeViewModel,
+                        shoppingListViewModel = shoppingListViewModel
+                    )
                 }
             }
         }
         composable("likedRecipes/{backActive}") { backStackEntry ->
+            var intId by remember { mutableStateOf<String?>(null) }
             val backActive = backStackEntry.arguments?.getString("backActive")?.toBoolean() ?: false
 
-            currentUser?.let { user ->
-                println("user.uid: " + user.uid)
-                LikedRecipePage(
-                    userId = user.uid,
-                    navController = navController,
-                    backActive = backActive,
-                    onBackClick = { navController.popBackStack() },
-                    likedRecipeViewModel = likedRecipeViewModel
-                )
-            } ?: run {
+            if (currentUser == null) {
                 navController.navigate("login") {
                     popUpTo("login") { inclusive = true }
                 }
-            }
-        }
-        composable("ingredients") {
+            } else {
+                LaunchedEffect(Unit) {
+                    loginViewModel.getIntID { id ->
+                        intId = id
+                    }
+                }
 
-            currentUser?.let { user ->
-                println("user.uid: " + user.uid)
-                InventoryPage(
-                    navController = navController,
-                    userId = user.uid, // Pass the userId
-                    onNavigateBack = { navController.popBackStack() },
-                    userIngredientsViewModel = userIngredientsViewModel
-                )
-            } ?: run {
-                navController.navigate("login") {
-                    popUpTo("login") { inclusive = true }
+                intId?.let { userId ->
+                    LikedRecipePage(
+                        userId = userId,
+                        navController = navController,
+                        backActive = backActive,
+                        onBackClick = { navController.popBackStack() },
+                        likedRecipeViewModel = likedRecipeViewModel
+                    )
                 }
             }
         }
         composable("dislikedRecipes/{backActive}") { backStackEntry ->
+            var intId by remember { mutableStateOf<String?>(null) }
             val backActive = backStackEntry.arguments?.getString("backActive")?.toBoolean() ?: false
 
-            currentUser?.let { user ->
-                println("user.uid: " + user.uid)
-                DislikedRecipePage(
-                    userId = user.uid,
-                    navController = navController,
-                    backActive = backActive,
-                    onBackClick = { navController.popBackStack() },
-                    dislikedRecipeViewModel = dislikedRecipeViewModel
-                )
-            } ?: run {
+            if (currentUser == null) {
                 navController.navigate("login") {
                     popUpTo("login") { inclusive = true }
+                }
+            } else {
+                LaunchedEffect(Unit) {
+                    loginViewModel.getIntID { id ->
+                        intId = id
+                    }
+                }
+                intId?.let { userId ->
+                    DislikedRecipePage(
+                        userId = userId,
+                        navController = navController,
+                        backActive = backActive,
+                        onBackClick = { navController.popBackStack() },
+                        dislikedRecipeViewModel = dislikedRecipeViewModel
+                    )
                 }
             }
         }

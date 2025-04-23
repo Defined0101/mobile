@@ -83,7 +83,7 @@ fun IngredientSearch(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = ingredient.name,
+                        text = ingredient.name ?: "Unnamed Ingredient",
                         style = MaterialTheme.typography.bodyLarge
                     )
                 }

@@ -13,11 +13,11 @@ class RecipeRepository(private val apiService: ApiService) {
     private var cachedSavedRecipes: List<Recipe>? = null
 
     // API çağrısı yapmadan önce cache kontrolü
-    suspend fun getRecipes(forceRefresh: Boolean = false): List<Recipe> {
+    suspend fun getRecipes(userId: String, forceRefresh: Boolean = false): List<Recipe> {
         return withContext(Dispatchers.IO) {
             if (forceRefresh || cachedRecipes == null) {
                 try {
-                    cachedRecipes = apiService.getUserRecommendations()
+                    cachedRecipes = apiService.getUserRecommendations(userId)
                 } catch (e: Exception) {
                     e.printStackTrace()
                     cachedRecipes = emptyList()
