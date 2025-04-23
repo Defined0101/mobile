@@ -11,6 +11,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.tasks.await
 
 class LoginViewModel(application: Application) : AndroidViewModel(application) {
     @SuppressLint("StaticFieldLeak")
@@ -202,9 +203,28 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-
     fun currentUser(): FirebaseUser? {
         return auth.currentUser
+    }
+
+    fun getIntID(onResult: (String?) -> Unit) {
+        val uid = FirebaseAuth.getInstance().currentUser?.uid
+        if (uid == null) {
+            onResult(null)
+            return
+        }
+
+        FirebaseFirestore.getInstance()
+            .collection("users")
+            .document(uid)
+            .get()
+            .addOnSuccessListener { document ->
+                val intID = document.getLong("int_id")?.toString()
+                onResult(intID)
+            }
+            .addOnFailureListener { e ->
+                onResult(null)
+            }
     }
 
     // Logout

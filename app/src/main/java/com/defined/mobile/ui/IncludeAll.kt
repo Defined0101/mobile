@@ -17,6 +17,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.compose.foundation.Image
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.res.painterResource
 import com.defined.mobile.R
 import androidx.compose.ui.layout.ContentScale
@@ -205,20 +207,30 @@ fun AppNavigation(
             }
         }
         composable("allergies") {
+            var intId by remember { mutableStateOf<String?>(null) }
 
-            currentUser?.let { user ->
-                println("user.uid: " + user.uid)
-                AllergyPage(
-                    navController = navController,
-                    userId = user.uid, // Pass the userId
-                    onNavigateBack = { navController.popBackStack() }
-                )
-            } ?: run {
+            if (currentUser == null) {
                 navController.navigate("login") {
                     popUpTo("login") { inclusive = true }
                 }
+            } else {
+                // Sadece bir kez çalışsın
+                LaunchedEffect(Unit) {
+                    loginViewModel.getIntID { id ->
+                        intId = id
+                    }
+                }
+
+                intId?.let { userId ->
+                    AllergyPage(
+                        navController = navController,
+                        userId = userId,
+                        onNavigateBack = { navController.popBackStack() }
+                    )
+                }
             }
         }
+
         composable("ingredientSearch") {
             IngredientSearch(
                 navController = navController,

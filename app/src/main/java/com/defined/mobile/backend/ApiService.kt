@@ -56,7 +56,11 @@ interface ApiService {
     suspend fun setUserAllergies(@Body allergies: UserAllergies)
 
     @GET("getIngredients")
-    suspend fun getIngredients(@Query("page") page: Int, @Query("page_size") page_size: Int, @Query("search") search: String): IngredientResponse
+    suspend fun getIngredients(
+        @Query("page") page: Int,
+        @Query("page_size") pageSize: Int,
+        @Query("search") search: String? = null
+    ): IngredientResponse
 
     @GET("getUserIngredients")
     suspend fun getUserIngredients(@Query("user_id") userId: String): UserIngredients
