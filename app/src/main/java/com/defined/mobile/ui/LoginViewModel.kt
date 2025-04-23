@@ -10,6 +10,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
+import com.google.firebase.firestore.FirebaseFirestore
 
 class LoginViewModel(application: Application) : AndroidViewModel(application) {
     @SuppressLint("StaticFieldLeak")
@@ -24,6 +25,39 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
             .build()
         return GoogleSignIn.getClient(context, gso)
     }
+
+    fun handleGoogleUserIfNew(user: FirebaseUser, onResult: (Boolean, String?) -> Unit) {
+        val userRef = FirebaseFirestore.getInstance()
+            .collection("users")
+            .document(user.uid)
+
+        userRef.get()
+            .addOnSuccessListener { document ->
+                if (document.exists()) {
+                    // Kullanıcı zaten var, int_id eklemeye gerek yok
+                    onResult(true, null)
+                } else {
+                    // Yeni kullanıcı → int_id üretip kaydet
+                    generateNextUserID { intID, idError ->
+                        if (intID != null) {
+                            saveUserWithIntID(user, intID) { saveSuccess, saveError ->
+                                if (saveSuccess) {
+                                    onResult(true, null)
+                                } else {
+                                    onResult(false, "Kayıt başarısız: $saveError")
+                                }
+                            }
+                        } else {
+                            onResult(false, "ID üretilemedi: $idError")
+                        }
+                    }
+                }
+            }
+            .addOnFailureListener { e ->
+                onResult(false, "Kullanıcı kontrolü başarısız: ${e.message}")
+            }
+    }
+
 
     // Kullanıcı email doğrulaması yapmış mı kontrol eder
     fun isEmailVerified(): Boolean {
@@ -43,20 +77,44 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     // Kullanıcı email & şifre ile kayıt olur ve email doğrulama linki gönderilir
-    fun signUpWithEmail(email: String, password: String, onResult: (FirebaseUser?, String?) -> Unit) {
+    fun signUpWithEmail(
+        email: String,
+        password: String,
+        onResult: (FirebaseUser?, Long?, String?) -> Unit
+    ) {
         auth.createUserWithEmailAndPassword(email, password)
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
                     val user = auth.currentUser
-                    sendEmailVerification { success, error ->
-                        if (success) {
-                            onResult(user, null)
-                        } else {
-                            onResult(null, error)
+                    if (user != null) {
+                        // 1. Email doğrulama gönder
+                        sendEmailVerification { emailSuccess, emailError ->
+                            if (emailSuccess) {
+                                // 2. Int ID üret
+                                generateNextUserID { intID, idError ->
+                                    if (intID != null) {
+                                        // 3. Firestore'a kaydet (UID -> int_id eşlemesi)
+                                        saveUserWithIntID(user, intID) { saveSuccess, saveError ->
+                                            if (saveSuccess) {
+                                                onResult(user, intID, null)
+                                            } else {
+                                                user.delete() // Firebase Authentication'dan da sil
+                                                onResult(null, null, "Firestore kayıt hatası: $saveError")
+                                            }
+                                        }
+                                    } else {
+                                        onResult(null, null, "ID üretilemedi: $idError")
+                                    }
+                                }
+                            } else {
+                                onResult(null, null, "Email doğrulama hatası: $emailError")
+                            }
                         }
+                    } else {
+                        onResult(null, null, "Kullanıcı oluşturuldu ama alınamadı.")
                     }
                 } else {
-                    onResult(null, task.exception?.message)
+                    onResult(null, null, task.exception?.message)
                 }
             }
     }
@@ -86,15 +144,64 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
     // Google Sign-In Authentication
     fun firebaseAuthWithGoogle(idToken: String, onResult: (FirebaseUser?, String?) -> Unit) {
         val credential = GoogleAuthProvider.getCredential(idToken, null)
+
         auth.signInWithCredential(credential)
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
-                    onResult(auth.currentUser, null)
+                    val user = auth.currentUser
+                    if (user != null) {
+                        // UID'yi kontrol et, users'a eklenmiş mi
+                        handleGoogleUserIfNew(user) { handled, error ->
+                            if (handled) {
+                                onResult(user, null)
+                            } else {
+                                onResult(null, error)
+                            }
+                        }
+                    } else {
+                        onResult(null, "Giriş başarılı ama kullanıcı null.")
+                    }
                 } else {
                     onResult(null, task.exception?.message)
                 }
             }
     }
+
+
+    fun saveUserWithIntID(user: FirebaseUser, intID: Long, onResult: (Boolean, String?) -> Unit) {
+        val userData = mapOf(
+            "int_id" to intID.toString(),
+        )
+
+        FirebaseFirestore.getInstance()
+            .collection("users")
+            .document(user.uid)
+            .set(userData)
+            .addOnSuccessListener {
+                onResult(true, null)
+            }
+            .addOnFailureListener { e ->
+                onResult(false, e.message)
+            }
+    }
+
+    private fun generateNextUserID(onResult: (Long?, String?) -> Unit) {
+        val counterRef = FirebaseFirestore.getInstance()
+            .collection("metadata").document("userCounter")
+
+        FirebaseFirestore.getInstance().runTransaction { transaction ->
+            val snapshot = transaction.get(counterRef)
+            val current = snapshot.getLong("count") ?: 1000L
+            val next = current + 1
+            transaction.update(counterRef, "count", next)
+            return@runTransaction next
+        }.addOnSuccessListener { nextID ->
+            onResult(nextID, null)
+        }.addOnFailureListener { e ->
+            onResult(null, e.message)
+        }
+    }
+
 
     fun currentUser(): FirebaseUser? {
         return auth.currentUser

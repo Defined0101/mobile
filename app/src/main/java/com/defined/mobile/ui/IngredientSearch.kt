@@ -4,12 +4,15 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.defined.mobile.backend.IngredientsViewModel
 import com.defined.mobile.entities.Ingredient
 import com.defined.mobile.ui.theme.BackButton
 
@@ -17,23 +20,25 @@ import com.defined.mobile.ui.theme.BackButton
 @Composable
 fun IngredientSearch(
     navController: NavController, // NavController for navigation
-    onNavigateBack: () -> Unit // Callback for back navigation
+    onNavigateBack: () -> Unit, // Callback for back navigation
+    ingredientsViewModel: IngredientsViewModel = viewModel()
 ) {
     var searchQuery by remember { mutableStateOf("") }
 
-    // TODO: Fetch all ingredients from backend and do not display all of them on the same page.
-    // Display top n ingredients
-    val allIngredients = listOf(
-        Ingredient("Peanuts", "gram","gram", 50f),
-        Ingredient("Shellfish","pint","pint", 50f),
-        Ingredient("Soy","gram","gram", 50f),
-        Ingredient("Eggs","gram","gram", 50f),
-        Ingredient("Wheat","gram","gram", 50f),
-        Ingredient("Milk","liter","gram", 50f)
-    )
+    val ingredients by ingredientsViewModel.ingredients.collectAsState()
+    val listState = rememberLazyListState()
 
-    val filteredIngredients = allIngredients.filter {
-        it.name.contains(searchQuery, ignoreCase = true)
+    LaunchedEffect(searchQuery) {
+        ingredientsViewModel.onSearchChanged(searchQuery)
+    }
+
+    LaunchedEffect(listState.firstVisibleItemIndex, listState.layoutInfo.totalItemsCount) {
+        val lastVisible = listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
+        val totalItems = listState.layoutInfo.totalItemsCount
+
+        if (lastVisible >= totalItems - 3) {
+            ingredientsViewModel.loadNextPage()
+        }
     }
 
     Column(
@@ -59,17 +64,18 @@ fun IngredientSearch(
 
         // Ingredient List
         LazyColumn(
+            state = listState,
             modifier = Modifier.fillMaxSize(),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            items(filteredIngredients) { ingredient ->
+            items(ingredients.items) { ingredient ->
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clickable {
                             navController.previousBackStackEntry?.savedStateHandle?.set(
                                 "selectedIngredient",
-                                Pair(ingredient.name, ingredient.default_unit) // ingredient.name
+                                Pair(ingredient.name, ingredient.default_unit)
                             )
                             navController.popBackStack()
                         }

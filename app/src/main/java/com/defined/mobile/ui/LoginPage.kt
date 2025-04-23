@@ -226,14 +226,17 @@ fun RegisterScreen(
                 if (email.isBlank() || password.isBlank()) {
                     errorMessage = ""
                 } else {
-                    viewModel.signUpWithEmail(email, password) { user, error ->
-                        if (user != null) {
-                            isEmailSent = true
-                            onSignUpClick()
+                    viewModel.signUpWithEmail(email, password) { user, intID, error ->
+                        if (user != null && intID != null) {
+                            // Kayıt başarılı 🎉
+                            println("User created: UID=${user.uid}, IntID=$intID")
+
                         } else {
-                            errorMessage = error
+                            // Hata
+                            println("Kayıt başarısız: $error")
                         }
                     }
+
                 }
             },
             modifier = Modifier.fillMaxWidth()

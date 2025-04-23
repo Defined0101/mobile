@@ -9,3 +9,9 @@ data class Ingredient(
     @SerializedName("quantity") val quantity: Float,
     @SerializedName("available") var available: Boolean = false
 )
+
+data class IngredientSearch(
+    @SerializedName("page") val page: Int,
+    @SerializedName("page_size") val page_size: Int,
+    @SerializedName("search") val search: String
+)

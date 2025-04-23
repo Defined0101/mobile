@@ -18,28 +18,3 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
-
-//@Composable
-//fun AppNavigation(navController: NavHostController) {
-//    NavHost(
-//        navController = navController,
-//        startDestination = "login" // Always start with login
-//    ) {
-//        composable("login") {
-//            val viewModel: LoginViewModel = viewModel()
-//            LoginPage(
-//                viewModel = viewModel,
-//                onSignInClick = { user ->
-//                    if (user != null) {
-//                        navController.navigate("main") {
-//                            popUpTo("login") { inclusive = true } // Remove login page from back stack
-//                        }
-//                    }
-//                }
-//            )
-//        }
-//        composable("main") {
-//            MainScreen()
-//        }
-//    }
-//}

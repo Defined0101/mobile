@@ -1,5 +1,6 @@
 package com.defined.mobile.backend
 
+import com.defined.mobile.entities.IngredientResponse
 import com.defined.mobile.entities.Recipe
 import com.defined.mobile.entities.UserPreferences
 import com.defined.mobile.entities.UserAllergies
@@ -55,7 +56,7 @@ interface ApiService {
     suspend fun setUserAllergies(@Body allergies: UserAllergies)
 
     @GET("getIngredients")
-    suspend fun getIngredients(): List<String>
+    suspend fun getIngredients(@Query("page") page: Int, @Query("page_size") page_size: Int, @Query("search") search: String): IngredientResponse
 
     @GET("getUserIngredients")
     suspend fun getUserIngredients(@Query("user_id") userId: String): UserIngredients
