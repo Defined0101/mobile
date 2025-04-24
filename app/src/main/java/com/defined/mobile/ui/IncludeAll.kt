@@ -51,7 +51,8 @@ fun ScreenWithBottomNav() {
         "allergies" to 3,
         "preferences" to 3,
         "ingredients" to 3,
-        "shoppingListPage" to 3
+        "shoppingListPage" to 3,
+        "ingredientSearch" to 3
     )
 
     var selectedItemIndex by rememberSaveable { mutableStateOf(0) }
@@ -152,7 +153,7 @@ fun AppNavigation(
             // Now that we have the internal user ID, fetch the recipes
             LaunchedEffect(userId) {
                 println("userId: $userId")
-                recipeViewModel.fetchRecipes(userId, forceRefresh = true)
+                recipeViewModel.fetchRecipes(userId, forceRefresh = false)
             }
         }
     }

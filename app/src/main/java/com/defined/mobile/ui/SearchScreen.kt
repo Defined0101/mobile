@@ -5,7 +5,10 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -25,6 +28,7 @@ import com.defined.mobile.backend.ShoppingListViewModel
 import com.defined.mobile.entities.QueryClass
 import com.defined.mobile.entities.Recipe
 import com.defined.mobile.ui.theme.StyledButton
+import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -45,7 +49,7 @@ fun SearchScreen(
     val preferencesVal by preferencesViewModel.preferences.collectAsState()
 
 
-
+    var textFieldValue by remember { mutableStateOf("") }
     var searchQuery by remember { mutableStateOf("") }
     var isFilterPopupVisible by remember { mutableStateOf(false) }
     var selectedSortOption by remember { mutableStateOf("None") }
@@ -71,33 +75,37 @@ fun SearchScreen(
         selectedPreferences.clear()
     }
 
-    // Lokal filtreleme işlemi: Arama, seçili kategoriler ve tercihlere göre
-    val displayedRecipes = remember(
-        recipesVal,
-        searchQuery,
-        selectedCategories.toList(),
-        selectedPreferences.toList(),
-        selectedSortOption
-    ) {
+    val currentFilter = remember(searchQuery, selectedCategories, selectedPreferences) {
+        QueryClass(
+            inputText  = searchQuery,
+            categories = selectedCategories.toList(),
+            labels     = selectedPreferences.toList()
+        )
+    }
+    fun sortField()     = "name"
+    fun sortDirection() = when(selectedSortOption) {
+        "Preparation Time (Ascending)"  -> "ascending"
+        "Preparation Time (Descending)" -> "descending"
+        else                             -> "none"
+    }
+
+    LaunchedEffect(textFieldValue) {
+        delay(3000)
+        searchQuery = textFieldValue
+    }
+
+    LaunchedEffect(searchQuery, selectedSortOption) {
+        // boş sorguyu atlama istersen if(searchQuery.isNotBlank())
         val qc = QueryClass(
             inputText  = searchQuery,
             categories = selectedCategories.toList(),
             labels     = selectedPreferences.toList()
         )
-        recipeViewModel.searchRecipes(qc, "name", selectedSortOption)
-        recipesVal.filter { recipe ->
-            (searchQuery.isEmpty() || recipe.Name.contains(searchQuery, ignoreCase = true)) &&
-                    (selectedCategories.isEmpty() || selectedCategories.contains(recipe.Category)) &&
-                    (selectedPreferences.isEmpty() || selectedPreferences.all { pref ->
-                        recipe.Label?.contains(pref) ?: false
-                    })
-        }.let { list ->
-            when (selectedSortOption) {
-                "Preparation Time (Ascending)" -> list.sortedBy { it.TotalTime }
-                "Preparation Time (Descending)" -> list.sortedByDescending { it.TotalTime }
-                else -> list.sortedBy { it.ID }
-            }
-        }
+        recipeViewModel.searchRecipes(
+            qc,
+            sortField(),
+            sortDirection()
+        )
     }
 
     Column(
@@ -105,7 +113,6 @@ fun SearchScreen(
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-
         ScreenHeader(
             title = "",
             onNavigateBack = onBackClick
@@ -121,10 +128,9 @@ fun SearchScreen(
         }
          */
         OutlinedTextField(
-            value = searchQuery,
+            value = textFieldValue,
             onValueChange = {
-                searchQuery = it
-
+                textFieldValue = it
                 },
             placeholder = { Text("Search...") },
             modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
@@ -154,7 +160,7 @@ fun SearchScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "${displayedRecipes.size} recipes found",
+                text = "${recipesVal.size} recipes found",
                 style = MaterialTheme.typography.bodyMedium
             )
             // Filtreler boş değilse yanına ek metin
@@ -173,11 +179,10 @@ fun SearchScreen(
             modifier = Modifier.fillMaxSize(),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            itemsIndexed(displayedRecipes) { _, recipe ->
-                RecipeItem(
-                    recipe = recipe,
-                    onClick = { navController.navigate("recipePage/${recipe.ID}") }
-                )
+            items(recipesVal) { recipe ->
+                RecipeItem(recipe) {
+                    navController.navigate("recipePage/${recipe.ID}")
+                }
             }
         }
     }
@@ -263,17 +268,31 @@ fun FilterPopup(
     selectedPreferences: List<String>,
     onPreferenceToggle: (String) -> Unit
 ) {
-    if (isVisible) {
-        ModalBottomSheet(
-            onDismissRequest = onDismiss,
-            dragHandle = { Spacer(modifier = Modifier.height(8.dp)) }
+    if (!isVisible) return
+
+    // we’ll need this for the scroll state:
+    val scrollState = rememberScrollState()
+
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        dragHandle = { Spacer(modifier = Modifier.height(8.dp)) }
+    ) {
+        // Wrap in a Box with a height constraint so it never grows past the screen:
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(max = 400.dp)       // tweak as needed!
         ) {
             Column(
-                modifier = Modifier.fillMaxWidth().padding(16.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(scrollState)  // ← make it scrollable
+                    .padding(16.dp)
             ) {
                 Text("Filter Options", style = MaterialTheme.typography.headlineSmall)
                 Spacer(modifier = Modifier.height(16.dp))
-                // Kategoriler
+
+                // --- Categories ---
                 Text("Categories", style = MaterialTheme.typography.titleMedium)
                 Spacer(modifier = Modifier.height(8.dp))
                 categories.forEach { cat ->
@@ -282,26 +301,34 @@ fun FilterPopup(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.padding(vertical = 4.dp)
                     ) {
-                        Checkbox(checked = isChecked, onCheckedChange = { onCategoryToggle(cat) })
+                        Checkbox(
+                            checked = isChecked,
+                            onCheckedChange = { onCategoryToggle(cat) }
+                        )
                         Text(cat)
                     }
                 }
+
                 Divider(modifier = Modifier.padding(vertical = 16.dp))
-                // Preferences
+
+                // --- Preferences ---
                 Text("Preferences", style = MaterialTheme.typography.titleMedium)
                 Spacer(modifier = Modifier.height(8.dp))
                 val formattedPreferences = refactorDietPreferences(preferences)
-
                 preferences.zip(formattedPreferences).forEach { (pref, displayName) ->
                     val isChecked = pref in selectedPreferences
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.padding(vertical = 4.dp)
                     ) {
-                        Checkbox(checked = isChecked, onCheckedChange = { onPreferenceToggle(pref) })
+                        Checkbox(
+                            checked = isChecked,
+                            onCheckedChange = { onPreferenceToggle(pref) }
+                        )
                         Text(displayName)
                     }
                 }
+
                 Spacer(modifier = Modifier.height(24.dp))
                 Row(
                     modifier = Modifier.fillMaxWidth(),

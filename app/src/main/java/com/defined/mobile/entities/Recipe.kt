@@ -17,13 +17,13 @@ data class Recipe (
 )
 
 data class QueryClass(
-    @SerializedName("input_text") val inputText: String,
+    @SerializedName("inputText") val inputText: String,
     @SerializedName("categories") val categories: List<String>,
     @SerializedName("labels") val labels: List<String>
 )
 
 data class RecipeSearch(
     @SerializedName("query") val query: QueryClass,
-    @SerializedName("sortBy_field") val sortByField: String,
-    @SerializedName("sortBy_direction") val sortByDirection: String
+    @SerializedName("sortByField") val sortByField: String,
+    @SerializedName("sortByDirection") val sortByDirection: String
 )

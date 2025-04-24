@@ -41,7 +41,7 @@ interface ApiService {
     @POST("setUserPreferences")
     suspend fun setUserPreferences(@Body preferences: UserPreferences)
 
-    @POST("query")
+    @POST("searchRecipe")
     suspend fun queryRecipes(
         @Body recipeSearch: RecipeSearch
     ): List<Recipe>
