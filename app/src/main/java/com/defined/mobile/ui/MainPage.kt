@@ -23,6 +23,8 @@ import com.defined.mobile.backend.CategoryViewModel
 import com.defined.mobile.backend.RecipeViewModel
 import com.defined.mobile.backend.ShoppingListViewModel
 import com.defined.mobile.ui.theme.*
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.first
 
 @Composable
 fun MainPage(recipeViewModel: RecipeViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
@@ -53,22 +55,40 @@ fun SurpriseMeButton(
     navController: NavController,
     userId: String
 ) {
+    // 1) “go” flag’ini remember ile tut, mutableState olduğuna dikkat et
+    var go by remember { mutableStateOf(false) }
+    // 2) sürpriz ID’yi koleksiyonla al
     val surpriseRecipeId by recipeViewModel
         .surpriseRecipe
         .collectAsState(initial = 0)
 
     Button(
         onClick = {
+            // 3) butona her basıldığında önce fetch'i tetikle
             recipeViewModel.fetchSurpriseRecipeId(userId)
+            // 4) sonra go flag’ini true yap
+            go = true
         },
         modifier = Modifier.fillMaxWidth()
     ) {
         Text("Surprise Me")
     }
 
-    LaunchedEffect(surpriseRecipeId) {
-        if (surpriseRecipeId != 0) {
-            navController.navigate("recipePage/$surpriseRecipeId")
+    // 5) go state’i değiştiğinde bu effect çalışır
+    LaunchedEffect(go) {
+        if (go) {
+            // 6) Eğer ID henüz 0’sa, emitlenmesini bekle
+            val id = if (surpriseRecipeId != 0) {
+                surpriseRecipeId
+            } else {
+                snapshotFlow { surpriseRecipeId }
+                    .filter { it != 0 }
+                    .first()      // suspend; ilk non-zero değeri al
+            }
+            // 7) navigasyonu yap
+            navController.navigate("recipePage/$id")
+            // 8) flag’i sıfırla ki bir sonraki tıklamada yeniden çalışsın
+            go = false
         }
     }
 }

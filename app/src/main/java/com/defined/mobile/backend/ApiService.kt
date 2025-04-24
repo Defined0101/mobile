@@ -2,6 +2,8 @@ package com.defined.mobile.backend
 
 import com.defined.mobile.entities.IngredientResponse
 import com.defined.mobile.entities.Recipe
+import com.defined.mobile.entities.RecipeSearch
+import com.defined.mobile.entities.User
 import com.defined.mobile.entities.UserPreferences
 import com.defined.mobile.entities.UserAllergies
 import com.defined.mobile.entities.UserIngredients
@@ -21,8 +23,8 @@ interface ApiService {
     @GET("getRecipeDetails")
     suspend fun getRecipeDetails(@Query("recipe_id") recipeId: Int): Recipe
 
-    @GET("getSurpriseRecipeId")
-    suspend fun getSurpriseRecipeId(@Query("user_id") userId: String): Int
+    @GET("getSurpriseRecipe")
+    suspend fun getSurpriseRecipe(@Query("user_id") userId: String): Recipe
 
     @GET("getRecipeCard")
     suspend fun getRecipeCard(
@@ -39,11 +41,9 @@ interface ApiService {
     @POST("setUserPreferences")
     suspend fun setUserPreferences(@Body preferences: UserPreferences)
 
-    @GET("query")
+    @POST("query")
     suspend fun queryRecipes(
-        @Query("query") queryJson: String, // JSON-encoded query
-        @Query("sortBy.field") sortByField: String,
-        @Query("sortBy.direction") sortByDirection: String
+        @Body recipeSearch: RecipeSearch
     ): List<Recipe>
 
     @GET("getAllergies")
@@ -118,4 +118,9 @@ interface ApiService {
 
     @GET("getDislikedRecipes")
     suspend fun getDislikedRecipes(@Query("user_id") userId: String): List<Recipe>
+
+    @POST("users/")
+    suspend fun createUser(
+        @Body user: User
+    ): List<User>
 }

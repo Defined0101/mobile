@@ -205,7 +205,7 @@ fun DietPreferenceChip(
 @Composable
 fun InfoBadge(
     icon: ImageVector,
-    label: String,
+    label: String?,
     modifier: Modifier = Modifier
 ) {
 
@@ -227,11 +227,13 @@ fun InfoBadge(
                 modifier = Modifier.size(16.dp)
             )
             Spacer(modifier = Modifier.width(6.dp))
-            Text(
-                text = label,
-                style = MaterialTheme.typography.bodySmall,
-                color = badgeContentColor
-            )
+            if (label != null) {
+                Text(
+                    text = label,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = badgeContentColor
+                )
+            }
         }
     }
 }

@@ -2,6 +2,7 @@ package com.defined.mobile.backend
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.defined.mobile.entities.QueryClass
 import com.defined.mobile.entities.Recipe
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -24,8 +25,8 @@ class RecipeViewModel : ViewModel() {
     private val _recipeDetails = MutableStateFlow<Recipe?>(null)
     val recipeDetails: StateFlow<Recipe?> = _recipeDetails
 
-    private val _surpriseRecipe = MutableStateFlow<Int>(0)
-    val surpriseRecipe: StateFlow<Int> = _surpriseRecipe
+    private val _surpriseRecipe = MutableStateFlow<Recipe?>(null)
+    val surpriseRecipe: StateFlow<Recipe?> = _surpriseRecipe
 
     private val _recipeCard = MutableStateFlow<Map<String, Any>?>(null)
     val recipeCard: StateFlow<Map<String, Any>?> = _recipeCard
@@ -73,7 +74,7 @@ class RecipeViewModel : ViewModel() {
         }
     }
 
-    private fun fetchSavedRecipes(userId: String, forceRefresh: Boolean = false) {
+    private fun fetchSavedRecipes(userId: String, forceRefresh: Boolean = true) {
         viewModelScope.launch {
             try {
                 val recipesList = repository.getSavedRecipes(userId, forceRefresh)
@@ -99,7 +100,7 @@ class RecipeViewModel : ViewModel() {
     fun fetchSurpriseRecipeId(userId: String) {
         viewModelScope.launch {
             try {
-                val response = RetrofitClient.apiService.getSurpriseRecipeId(userId)
+                val response = RetrofitClient.apiService.getSurpriseRecipe(userId)
                 _surpriseRecipe.value = response
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -118,11 +119,10 @@ class RecipeViewModel : ViewModel() {
         }
     }
 
-    fun searchRecipes(queryJson: String, sortByField: String, sortByDirection: String, forceRefresh: Boolean = false) {
+    fun searchRecipes(queryJson: QueryClass, sortByField: String, sortByDirection: String) {
         viewModelScope.launch {
             try {
-                val encodedQuery = URLEncoder.encode(queryJson, "UTF-8") // Ensure safe URL encoding
-                val recipesList = repository.searchRecipes(encodedQuery, sortByField, sortByDirection, forceRefresh)
+                val recipesList = repository.searchRecipes(queryJson, sortByField, sortByDirection)
                 _recipes.value = recipesList
             } catch (e: Exception) {
                 e.printStackTrace()

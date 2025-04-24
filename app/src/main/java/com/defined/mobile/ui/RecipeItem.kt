@@ -40,7 +40,7 @@ fun RecipeItem(
             // Thumbnail
             Image(
                 painter = painterResource(id = R.drawable.ic_launcher_foreground),
-                contentDescription = recipe.Name,
+                contentDescription = recipe.Name ?: "Recipe image",
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .size(80.dp)
@@ -55,7 +55,7 @@ fun RecipeItem(
                     .weight(1f)
             ) {
                 Text(
-                    text = recipe.Name,
+                    text = recipe.Name ?: "Unnamed Recipe",
                     style = MaterialTheme.typography.titleSmall.copy(
                         color = MaterialTheme.colorScheme.onSurface
                     )
@@ -90,7 +90,7 @@ fun RecipeItem(
                 Spacer(modifier = Modifier.width(8.dp))
                 DeleteButton(
                     onClick = { deleteOnClick() },
-                    contentDescription = "Delete ${recipe.Name}"
+                    contentDescription = "Delete ${recipe.Name ?: "recipe"}"
                 )
             }
         }

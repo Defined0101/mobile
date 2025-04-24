@@ -3,7 +3,10 @@ package com.defined.mobile.ui
 import android.annotation.SuppressLint
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
 import com.defined.mobile.R
+import com.defined.mobile.backend.RetrofitClient
+import com.defined.mobile.entities.User
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
@@ -11,6 +14,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
 class LoginViewModel(application: Application) : AndroidViewModel(application) {
@@ -174,16 +178,36 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
             "int_id" to intID.toString(),
         )
 
+        val userIdStr = intID.toString()
+
+        // Firestore'a kayıt
         FirebaseFirestore.getInstance()
             .collection("users")
             .document(user.uid)
             .set(userData)
             .addOnSuccessListener {
-                onResult(true, null)
+                // Firestore başarılıysa backend'e kaydet
+                saveToBackend(userIdStr, onResult)
             }
             .addOnFailureListener { e ->
-                onResult(false, e.message)
+                onResult(false, "Firestore error: ${e.message}")
             }
+    }
+
+    private fun saveToBackend(userId: String, onResult: (Boolean, String?) -> Unit) {
+        // Coroutine kullanılacağı için ViewModelScope
+        viewModelScope.launch {
+            try {
+                // Backend'e user oluşturma çağrısı
+                RetrofitClient.apiService.createUser(User(
+                    userId = userId
+                ))
+                onResult(true, null)
+            } catch (e: Exception) {
+                e.printStackTrace()
+                onResult(false, "Backend user creation failed: ${e.localizedMessage}")
+            }
+        }
     }
 
     private fun generateNextUserID(onResult: (Long?, String?) -> Unit) {
@@ -220,6 +244,7 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
             .get()
             .addOnSuccessListener { document ->
                 val intID = document.getString("int_id") //document.getLong("int_id")?.toString()
+                println("int_id: $intID")
                 onResult(intID)
             }
             .addOnFailureListener { e ->

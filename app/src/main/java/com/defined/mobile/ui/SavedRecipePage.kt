@@ -63,7 +63,7 @@ fun SavedRecipePage(
                             (selectedCategories.isEmpty() || selectedCategories.contains(recipe.Category)) &&
                             // preferences
                             (selectedPreferences.isEmpty() || selectedPreferences.all { pref ->
-                                recipe.Label.contains(pref)
+                                recipe.Label?.contains(pref) ?: false
                             })
                 }
                 .let { list ->

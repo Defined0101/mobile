@@ -36,11 +36,18 @@ class IngredientsViewModel : ViewModel() {
             try {
                 val searchParam = if (search.isBlank()) null else search
 
-                val response = RetrofitClient.apiService.getIngredients(
-                    page = currentPage,
-                    pageSize = 10,
-                    search = searchParam
-                )
+                val response = if (search == "") {
+                    RetrofitClient.apiService.getIngredients(
+                        page = currentPage,
+                        pageSize = 10
+                    )
+                } else {
+                    RetrofitClient.apiService.getIngredients(
+                        page = currentPage,
+                        pageSize = 10,
+                        search = searchParam
+                    )
+                }
                 val newItems = response.items.map { it }
                 val combinedItems = _ingredients.value.items + newItems
                 _ingredients.value = response.copy(items = combinedItems)

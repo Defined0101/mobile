@@ -3,10 +3,10 @@ package com.defined.mobile.entities
 import com.google.gson.annotations.SerializedName
 
 data class Ingredient(
-    @SerializedName("ingr_name") val name: String,
+    @SerializedName("name") val name: String = "Unnamed Ingredient",
     @SerializedName("default_unit") val default_unit: String = "piece",
     @SerializedName("unit") val unit: String = "piece",
-    @SerializedName("quantity") val quantity: Float,
+    @SerializedName("quantity") val quantity: Float = 0f,
     @SerializedName("available") var available: Boolean = false
 )
 

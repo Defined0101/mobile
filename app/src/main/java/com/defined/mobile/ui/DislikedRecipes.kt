@@ -63,7 +63,10 @@ fun DislikedRecipePage(
                     // Kategori filtresi: seçili kategori varsa tarifin kategorisi listede yer almalı
                     (selectedCategories.isEmpty() || selectedCategories.contains(recipe.Category)) &&
                     // Preference filtresi: seçili tüm tercihler tarifin etiketlerinde yer almalı
-                    (selectedPreferences.isEmpty() || selectedPreferences.all { pref -> recipe.Label.contains(pref) })
+
+                    (selectedPreferences.isEmpty() || selectedPreferences.all { pref ->
+                        recipe.Label?.contains(pref) ?: false
+                    })
         }.let { list ->
             when (selectedSortOption) {
                 "Preparation Time (Ascending)" -> list.sortedBy { it.TotalTime }

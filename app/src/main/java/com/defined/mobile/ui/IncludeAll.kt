@@ -43,13 +43,15 @@ fun ScreenWithBottomNav() {
         "main" to 0,
         "search/{backActive}/{selectedCategory}" to 1,
         "likedRecipes/{backActive}" to 2,
+        "dislikedRecipes/{backActive}" to 3,
         "profile" to 3,
-        "savedRecipes" to 3,
+        "savedRecipes/{backActive}" to 3,
         "profileInformation" to 3,
         "favourites" to 3,
         "allergies" to 3,
         "preferences" to 3,
-        "ingredients" to 3
+        "ingredients" to 3,
+        "shoppingListPage" to 3
     )
 
     var selectedItemIndex by rememberSaveable { mutableStateOf(0) }
@@ -64,6 +66,8 @@ fun ScreenWithBottomNav() {
 
     // Update selected index based on current route
     selectedItemIndex = routeToIndex[currentRoute] ?: 0 // Default to Home if route not mapped
+
+    println("selectedItemIndex: " + selectedItemIndex)
 
     val recipeViewModel: RecipeViewModel = viewModel()
     val categoryViewModel: CategoryViewModel = viewModel()
@@ -148,7 +152,7 @@ fun AppNavigation(
             // Now that we have the internal user ID, fetch the recipes
             LaunchedEffect(userId) {
                 println("userId: $userId")
-                recipeViewModel.fetchRecipes(userId)
+                recipeViewModel.fetchRecipes(userId, forceRefresh = true)
             }
         }
     }
@@ -331,6 +335,8 @@ fun AppNavigation(
                         intId = id
                     }
                 }
+
+                println("recipeId: " + recipeId)
 
                 intId?.let { userId ->
                     RecipePage(

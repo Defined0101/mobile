@@ -22,6 +22,7 @@ import com.defined.mobile.backend.CategoryViewModel
 import com.defined.mobile.backend.PreferencesViewModel
 import com.defined.mobile.backend.RecipeViewModel
 import com.defined.mobile.backend.ShoppingListViewModel
+import com.defined.mobile.entities.QueryClass
 import com.defined.mobile.entities.Recipe
 import com.defined.mobile.ui.theme.StyledButton
 
@@ -42,6 +43,8 @@ fun SearchScreen(
     val recipesVal by recipeViewModel.recipes.collectAsState()
     val categoriesVal by categoryViewModel.categories.collectAsState()
     val preferencesVal by preferencesViewModel.preferences.collectAsState()
+
+
 
     var searchQuery by remember { mutableStateOf("") }
     var isFilterPopupVisible by remember { mutableStateOf(false) }
@@ -76,10 +79,18 @@ fun SearchScreen(
         selectedPreferences.toList(),
         selectedSortOption
     ) {
+        val qc = QueryClass(
+            inputText  = searchQuery,
+            categories = selectedCategories.toList(),
+            labels     = selectedPreferences.toList()
+        )
+        recipeViewModel.searchRecipes(qc, "name", selectedSortOption)
         recipesVal.filter { recipe ->
             (searchQuery.isEmpty() || recipe.Name.contains(searchQuery, ignoreCase = true)) &&
                     (selectedCategories.isEmpty() || selectedCategories.contains(recipe.Category)) &&
-                    (selectedPreferences.isEmpty() || selectedPreferences.all { pref -> recipe.Label.contains(pref) })
+                    (selectedPreferences.isEmpty() || selectedPreferences.all { pref ->
+                        recipe.Label?.contains(pref) ?: false
+                    })
         }.let { list ->
             when (selectedSortOption) {
                 "Preparation Time (Ascending)" -> list.sortedBy { it.TotalTime }
@@ -111,7 +122,10 @@ fun SearchScreen(
          */
         OutlinedTextField(
             value = searchQuery,
-            onValueChange = { searchQuery = it },
+            onValueChange = {
+                searchQuery = it
+
+                },
             placeholder = { Text("Search...") },
             modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
             colors = TextFieldDefaults.outlinedTextFieldColors()

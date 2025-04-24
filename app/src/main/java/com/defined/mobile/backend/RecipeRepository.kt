@@ -1,6 +1,8 @@
 package com.defined.mobile.backend
 
+import com.defined.mobile.entities.QueryClass
 import com.defined.mobile.entities.Recipe
+import com.defined.mobile.entities.RecipeSearch
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -55,7 +57,7 @@ class RecipeRepository(private val apiService: ApiService) {
         }
     }
 
-    suspend fun getSavedRecipes(userId: String, forceRefresh: Boolean = false): List<Recipe> {
+    suspend fun getSavedRecipes(userId: String, forceRefresh: Boolean = true): List<Recipe> {
         return withContext(Dispatchers.IO) {
             if (forceRefresh || cachedSavedRecipes == null) {
                 try {
@@ -71,15 +73,15 @@ class RecipeRepository(private val apiService: ApiService) {
 
     // Arama/sorgu yapılırken cache güncellenebilir
     suspend fun searchRecipes(
-        queryJson: String,
+        queryJson: QueryClass,
         sortByField: String,
         sortByDirection: String,
-        forceRefresh: Boolean = false
     ): List<Recipe> {
         return withContext(Dispatchers.IO) {
             try {
-                val recipes = apiService.queryRecipes(queryJson, sortByField, sortByDirection)
-                // İsteğe bağlı: cache'i güncelle
+                val a = RecipeSearch(queryJson, sortByField, sortByDirection)
+                println(a)
+                val recipes = apiService.queryRecipes(RecipeSearch(queryJson, sortByField, sortByDirection))
                 cachedRecipes = recipes
                 recipes
             } catch (e: Exception) {
