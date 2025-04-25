@@ -123,6 +123,13 @@ class RecipeViewModel : ViewModel() {
         }
     }
 
+    suspend fun getRecipeCardOnce(
+        recipeId: Int,
+        fields: List<String>
+    ): Map<String, Any> {
+        return RetrofitClient.apiService.getRecipeCard(recipeId, fields)
+    }
+
     fun searchRecipes(queryJson: QueryClass, sortByField: String, sortByDirection: String) {
         viewModelScope.launch {
             try {

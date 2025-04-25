@@ -31,7 +31,7 @@ interface ApiService {
     suspend fun getRecipeCard(
         @Query("recipe_id") recipeId: Int,
         @Query("fields") fields: List<String>
-    ): Map<String, List<String>>
+    ): Map<String, Any>
 
     @GET("getPreferences") // was getLabels. to avoid confusion changed to Preferences = Labels.
     suspend fun getPreferences(): List<String>

@@ -38,14 +38,16 @@ fun RecipeItem(
     // 3) recipeCard event’ini al
     val recipeCard by recipeViewModel.recipeCard.collectAsState()
 
-    // 4) Eğer gelen card bizim recipe.ID’e aitse, displayedTime’ı güncelle
-    LaunchedEffect(recipeCard) {
-        recipeCard?.let { card ->
-            val id   = (card["recipe_id"] as? Number)?.toInt() ?: return@LaunchedEffect
+    LaunchedEffect(recipe.ID) {
+        try {
+            val card = recipeViewModel.getRecipeCardOnce(
+                recipeId = recipe.ID,
+                fields   = listOf("total_time")
+            )
             val time = (card["total_time"] as? Number)?.toFloat() ?: return@LaunchedEffect
-            if (id == recipe.ID) {
-                displayedTime = time
-            }
+            displayedTime = time
+        } catch (e: Exception) {
+            // handle error or leave the default
         }
     }
 

@@ -53,7 +53,7 @@ fun SearchScreen(
     var textFieldValue by remember { mutableStateOf("") }
     var searchQuery by remember { mutableStateOf("") }
     var isFilterPopupVisible by remember { mutableStateOf(false) }
-    var selectedSortOption by remember { mutableStateOf("None") }
+    var selectedSortOption by remember { mutableStateOf("Preparation Time (Descending)") }
     val sortOptions = listOf("None", "Preparation Time (Ascending)", "Preparation Time (Descending)")
 
     // Çoklu kategori seçimi için state; başlangıçta initialSelectedCategory boş değilse ekle
