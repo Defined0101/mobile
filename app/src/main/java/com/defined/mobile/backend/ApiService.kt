@@ -3,6 +3,7 @@ package com.defined.mobile.backend
 import com.defined.mobile.entities.IngredientResponse
 import com.defined.mobile.entities.Recipe
 import com.defined.mobile.entities.RecipeSearch
+import com.defined.mobile.entities.RecipeSearchResponse
 import com.defined.mobile.entities.User
 import com.defined.mobile.entities.UserPreferences
 import com.defined.mobile.entities.UserAllergies
@@ -44,7 +45,7 @@ interface ApiService {
     @POST("searchRecipe")
     suspend fun queryRecipes(
         @Body recipeSearch: RecipeSearch
-    ): List<Recipe>
+    ): List<RecipeSearchResponse>
 
     @GET("getAllergies")
     suspend fun getAllergies(): List<String>
@@ -122,5 +123,5 @@ interface ApiService {
     @POST("users/")
     suspend fun createUser(
         @Body user: User
-    ): List<User>
+    ): User
 }

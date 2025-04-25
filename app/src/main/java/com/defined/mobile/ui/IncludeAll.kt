@@ -317,7 +317,8 @@ fun AppNavigation(
                         navController = navController,
                         onBackClick = { navController.popBackStack() },
                         savedRecipeViewModel = savedRecipeViewModel,
-                        backActive = backActive
+                        backActive = backActive,
+                        recipeViewModel = recipeViewModel
                     )
                 }
             }
@@ -373,7 +374,8 @@ fun AppNavigation(
                         navController = navController,
                         backActive = backActive,
                         onBackClick = { navController.popBackStack() },
-                        likedRecipeViewModel = likedRecipeViewModel
+                        likedRecipeViewModel = likedRecipeViewModel,
+                        recipeViewModel = recipeViewModel
                     )
                 }
             }
@@ -398,7 +400,8 @@ fun AppNavigation(
                         navController = navController,
                         backActive = backActive,
                         onBackClick = { navController.popBackStack() },
-                        dislikedRecipeViewModel = dislikedRecipeViewModel
+                        dislikedRecipeViewModel = dislikedRecipeViewModel,
+                        recipeViewModel = recipeViewModel
                     )
                 }
             }

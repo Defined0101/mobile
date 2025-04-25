@@ -22,9 +22,11 @@ import com.defined.mobile.R
 import com.defined.mobile.backend.CategoryViewModel
 import com.defined.mobile.backend.RecipeViewModel
 import com.defined.mobile.backend.ShoppingListViewModel
+import com.defined.mobile.entities.Recipe
 import com.defined.mobile.ui.theme.*
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
+import kotlin.random.Random
 
 @Composable
 fun MainPage(recipeViewModel: RecipeViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
@@ -42,7 +44,7 @@ fun MainPage(recipeViewModel: RecipeViewModel = androidx.lifecycle.viewmodel.com
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         TopBar(onSearchClick)
-        loginViewModel.currentUser()?.let { SurpriseMeButton(recipeViewModel = recipeViewModel, navController = navController, userId = it.uid) }
+        loginViewModel.currentUser()?.let { SurpriseMeButton(recipeViewModel = recipeViewModel, navController = navController) }
         // FeaturedImage()
         CategorySection(viewModel = categoryViewModel, navController = navController)
         RecipeSection(navController, recipeViewModel)
@@ -53,46 +55,37 @@ fun MainPage(recipeViewModel: RecipeViewModel = androidx.lifecycle.viewmodel.com
 fun SurpriseMeButton(
     recipeViewModel: RecipeViewModel,
     navController: NavController,
-    userId: String
 ) {
-    // 1) “go” flag’ini remember ile tut, mutableState olduğuna dikkat et
     var go by remember { mutableStateOf(false) }
-    // 2) sürpriz ID’yi koleksiyonla al
-    val surpriseRecipeId by recipeViewModel
-        .surpriseRecipe
-        .collectAsState(initial = 0)
+    val recipeDetails by recipeViewModel
+        .recipeDetails
+        .collectAsState(initial = null)
 
     Button(
-        onClick = {
-            // 3) butona her basıldığında önce fetch'i tetikle
-            recipeViewModel.fetchSurpriseRecipeId(userId)
-            // 4) sonra go flag’ini true yap
-            go = true
-        },
+        onClick = { go = true },
         modifier = Modifier.fillMaxWidth()
     ) {
         Text("Surprise Me")
     }
 
-    // 5) go state’i değiştiğinde bu effect çalışır
     LaunchedEffect(go) {
-        if (go) {
-            // 6) Eğer ID henüz 0’sa, emitlenmesini bekle
-            val id = if (surpriseRecipeId != 0) {
-                surpriseRecipeId
-            } else {
-                snapshotFlow { surpriseRecipeId }
-                    .filter { it != 0 }
-                    .first()      // suspend; ilk non-zero değeri al
-            }
-            // 7) navigasyonu yap
-            navController.navigate("recipePage/$id")
-            // 8) flag’i sıfırla ki bir sonraki tıklamada yeniden çalışsın
-            go = false
+        if (!go) return@LaunchedEffect
+
+        // keep trying random IDs until recipeDetails != null
+        var detail: Recipe? = null
+        while (detail == null) {
+            val randomId = Random.nextInt(from = 1, until = 1_071_010)
+            recipeViewModel.fetchRecipeDetails(randomId)
+            detail = snapshotFlow { recipeDetails }
+                .filter { it != null }
+                .first()  // suspend until non-null
         }
+
+        // navigate and reset the flag
+        navController.navigate("recipePage/${detail.ID}")
+        go = false
     }
 }
-
 @Composable
 fun ClickableOutlinedTextField(
     onClick: () -> Unit
@@ -225,7 +218,8 @@ fun RecipeSection(navController: NavController, viewModel: RecipeViewModel = and
                 recipe= recipe,
                 onClick = {
                     navController.navigate("recipePage/${recipe.ID}")
-                }
+                },
+                recipeViewModel = viewModel
             )
         }
     }

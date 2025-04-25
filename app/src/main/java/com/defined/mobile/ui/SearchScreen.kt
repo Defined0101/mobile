@@ -25,6 +25,7 @@ import com.defined.mobile.backend.CategoryViewModel
 import com.defined.mobile.backend.PreferencesViewModel
 import com.defined.mobile.backend.RecipeViewModel
 import com.defined.mobile.backend.ShoppingListViewModel
+import com.defined.mobile.entities.Ingredient
 import com.defined.mobile.entities.QueryClass
 import com.defined.mobile.entities.Recipe
 import com.defined.mobile.ui.theme.StyledButton
@@ -44,7 +45,7 @@ fun SearchScreen(
     shoppingListViewModel: ShoppingListViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
     // Tüm tarif listesi (backend'den alınan liste)
-    val recipesVal by recipeViewModel.recipes.collectAsState()
+    val recipesVal by recipeViewModel.recipesSearch.collectAsState()
     val categoriesVal by categoryViewModel.categories.collectAsState()
     val preferencesVal by preferencesViewModel.preferences.collectAsState()
 
@@ -180,9 +181,22 @@ fun SearchScreen(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             items(recipesVal) { recipe ->
-                RecipeItem(recipe) {
-                    navController.navigate("recipePage/${recipe.ID}")
-                }
+                RecipeItem(
+                    Recipe(
+                        ID           = recipe.ID,
+                        Name         = recipe.Name,
+                        Ingredients  = recipe.Ingredients.map { name ->
+                            Ingredient(name = name)
+                        },
+                        TotalTime    = recipe.TotalTime,
+                        Category     = recipe.Category,
+                        Label        = recipe.Label
+                    ),
+                    recipeViewModel = recipeViewModel,
+                    onClick = {
+                        navController.navigate("recipePage/${recipe.ID}")
+                    }
+                )
             }
         }
     }

@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.defined.mobile.entities.QueryClass
 import com.defined.mobile.entities.Recipe
+import com.defined.mobile.entities.RecipeSearchResponse
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -12,6 +13,9 @@ import java.net.URLEncoder
 class RecipeViewModel : ViewModel() {
     private val _recipes = MutableStateFlow<List<Recipe>>(emptyList())
     val recipes: StateFlow<List<Recipe>> = _recipes
+
+    private val _recipesSearch = MutableStateFlow<List<RecipeSearchResponse>>(emptyList())
+    val recipesSearch: StateFlow<List<RecipeSearchResponse>> = _recipesSearch
 
     private val _dislikedRecipes = MutableStateFlow<List<Recipe>>(emptyList())
     val dislikedRecipes: StateFlow<List<Recipe>> = _dislikedRecipes
@@ -123,7 +127,7 @@ class RecipeViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 val recipesList = repository.searchRecipes(queryJson, sortByField, sortByDirection)
-                _recipes.value = recipesList
+                _recipesSearch.value = recipesList
             } catch (e: Exception) {
                 e.printStackTrace()
             }

@@ -3,6 +3,7 @@ package com.defined.mobile.backend
 import com.defined.mobile.entities.QueryClass
 import com.defined.mobile.entities.Recipe
 import com.defined.mobile.entities.RecipeSearch
+import com.defined.mobile.entities.RecipeSearchResponse
 import com.google.gson.Gson
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -77,7 +78,7 @@ class RecipeRepository(private val apiService: ApiService) {
         queryJson: QueryClass,
         sortByField: String,
         sortByDirection: String,
-    ): List<Recipe> {
+    ): List<RecipeSearchResponse> {
         return withContext(Dispatchers.IO) {
             try {
                 val payload = RecipeSearch(queryJson, sortByField, sortByDirection)
@@ -86,7 +87,6 @@ class RecipeRepository(private val apiService: ApiService) {
                 val json = Gson().toJson(payload)
                 println(">>> Request body JSON:\n$json")
                 val recipes = apiService.queryRecipes(RecipeSearch(queryJson, sortByField, sortByDirection))
-                cachedRecipes = recipes
                 recipes
             } catch (e: Exception) {
                 e.printStackTrace()

@@ -23,7 +23,8 @@ fun LikedRecipePage(
     navController: NavController,
     backActive: Boolean,
     onBackClick: () -> Unit,
-    likedRecipeViewModel: LikedRecipeViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+    likedRecipeViewModel: LikedRecipeViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
+    recipeViewModel: RecipeViewModel
 ) {
     // Tüm tarifler (disliked tariflerin listesi; örneğin backend'den gelen liste içerisinde filtre uygulayabilirsiniz)
     val recipesVal by likedRecipeViewModel.likedRecipes.collectAsState()
@@ -128,7 +129,8 @@ fun LikedRecipePage(
                     recipe = recipe,
                     onClick = { navController.navigate("recipePage/${recipe.ID}") },
                     deleteActive = true,
-                    deleteOnClick = { likedRecipeViewModel.removeLikedRecipe(userId, recipe) }
+                    deleteOnClick = { likedRecipeViewModel.removeLikedRecipe(userId, recipe) },
+                    recipeViewModel = recipeViewModel
                 )
             }
         }

@@ -9,6 +9,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.defined.mobile.backend.RecipeViewModel
 import com.defined.mobile.backend.SavedRecipeViewModel
 import com.defined.mobile.ui.theme.BackButton
 
@@ -19,6 +20,7 @@ fun SavedRecipePage(
     navController: NavController,
     onBackClick: () -> Unit,
     savedRecipeViewModel: SavedRecipeViewModel,
+    recipeViewModel: RecipeViewModel,
     backActive: Boolean = false
 ) {
     // 1) Collect the live list of saved recipes
@@ -132,7 +134,8 @@ fun SavedRecipePage(
                     recipe = recipe,
                     onClick = { navController.navigate("recipePage/${recipe.ID}") },
                     deleteActive = true,
-                    deleteOnClick = { savedRecipeViewModel.removeSavedRecipe(userId, recipe) }
+                    deleteOnClick = { savedRecipeViewModel.removeSavedRecipe(userId, recipe) },
+                    recipeViewModel = recipeViewModel
                 )
             }
         }

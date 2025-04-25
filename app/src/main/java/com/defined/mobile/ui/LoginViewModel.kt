@@ -31,7 +31,7 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
         return GoogleSignIn.getClient(context, gso)
     }
 
-    fun handleGoogleUserIfNew(user: FirebaseUser, onResult: (Boolean, String?) -> Unit) {
+    fun handleGoogleUserIfNew(user: FirebaseUser, eMail: String, onResult: (Boolean, String?) -> Unit) {
         val userRef = FirebaseFirestore.getInstance()
             .collection("users")
             .document(user.uid)
@@ -45,7 +45,7 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
                     // Yeni kullanıcı → int_id üretip kaydet
                     generateNextUserID { intID, idError ->
                         if (intID != null) {
-                            saveUserWithIntID(user, intID) { saveSuccess, saveError ->
+                            saveUserWithIntID(user, eMail, intID) { saveSuccess, saveError ->
                                 if (saveSuccess) {
                                     onResult(true, null)
                                 } else {
@@ -92,27 +92,19 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
                 if (task.isSuccessful) {
                     val user = auth.currentUser
                     if (user != null) {
-                        // 1. Email doğrulama gönder
-                        sendEmailVerification { emailSuccess, emailError ->
-                            if (emailSuccess) {
-                                // 2. Int ID üret
-                                generateNextUserID { intID, idError ->
-                                    if (intID != null) {
-                                        // 3. Firestore'a kaydet (UID -> int_id eşlemesi)
-                                        saveUserWithIntID(user, intID) { saveSuccess, saveError ->
-                                            if (saveSuccess) {
-                                                onResult(user, intID, null)
-                                            } else {
-                                                user.delete() // Firebase Authentication'dan da sil
-                                                onResult(null, null, "Firestore kayıt hatası: $saveError")
-                                            }
-                                        }
+                        // --- doğrudan Int ID üret ve kaydet ---
+                        generateNextUserID { intID, idError ->
+                            if (intID != null) {
+                                saveUserWithIntID(user, email, intID) { saveSuccess, saveError ->
+                                    if (saveSuccess) {
+                                        onResult(user, intID, null)
                                     } else {
-                                        onResult(null, null, "ID üretilemedi: $idError")
+                                        user.delete() // rollback
+                                        onResult(null, null, "Firestore kayıt hatası: $saveError")
                                     }
                                 }
                             } else {
-                                onResult(null, null, "Email doğrulama hatası: $emailError")
+                                onResult(null, null, "ID üretilemedi: $idError")
                             }
                         }
                     } else {
@@ -133,18 +125,12 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
         auth.signInWithEmailAndPassword(email, password)
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
-                    val user = auth.currentUser
-                    if (user?.isEmailVerified == true) {
-                        onResult(user, null)
-                    } else {
-                        onResult(null, "Please verify your email before logging in.")
-                    }
+                    onResult(auth.currentUser, null)
                 } else {
                     onResult(null, task.exception?.message)
                 }
             }
     }
-
 
     // Google Sign-In Authentication
     fun firebaseAuthWithGoogle(idToken: String, onResult: (FirebaseUser?, String?) -> Unit) {
@@ -156,11 +142,13 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
                     val user = auth.currentUser
                     if (user != null) {
                         // UID'yi kontrol et, users'a eklenmiş mi
-                        handleGoogleUserIfNew(user) { handled, error ->
-                            if (handled) {
-                                onResult(user, null)
-                            } else {
-                                onResult(null, error)
+                        user.email?.let {
+                            handleGoogleUserIfNew(user, it) { handled, error ->
+                                if (handled) {
+                                    onResult(user, null)
+                                } else {
+                                    onResult(null, error)
+                                }
                             }
                         }
                     } else {
@@ -173,7 +161,7 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
     }
 
 
-    fun saveUserWithIntID(user: FirebaseUser, intID: Long, onResult: (Boolean, String?) -> Unit) {
+    fun saveUserWithIntID(user: FirebaseUser, eMail: String, intID: Long, onResult: (Boolean, String?) -> Unit) {
         val userData = mapOf(
             "int_id" to intID.toString(),
         )
@@ -187,20 +175,21 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
             .set(userData)
             .addOnSuccessListener {
                 // Firestore başarılıysa backend'e kaydet
-                saveToBackend(userIdStr, onResult)
+                saveToBackend(userIdStr, eMail, onResult)
             }
             .addOnFailureListener { e ->
                 onResult(false, "Firestore error: ${e.message}")
             }
     }
 
-    private fun saveToBackend(userId: String, onResult: (Boolean, String?) -> Unit) {
+    private fun saveToBackend(userId: String, eMail: String, onResult: (Boolean, String?) -> Unit) {
         // Coroutine kullanılacağı için ViewModelScope
         viewModelScope.launch {
             try {
                 // Backend'e user oluşturma çağrısı
                 RetrofitClient.apiService.createUser(User(
-                    userId = userId
+                    userId = userId,
+                    eMail = eMail
                 ))
                 onResult(true, null)
             } catch (e: Exception) {
